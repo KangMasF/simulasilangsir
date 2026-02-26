@@ -3,101 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Twin - Stasiun Ketapang</title>
+    <title>Stasiun Ketapang - Pro Simulator</title>
     <style>
-        :root { --primary: #002d5e; --secondary: #f39c12; --danger: #e74c3c; --success: #27ae60; }
+        :root { --primary: #002d5e; --secondary: #f39c12; --danger: #e74c3c; --success: #27ae60; --loco: #3498db; }
         body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 10px; }
         .header { text-align: center; background: var(--primary); padding: 10px; border-radius: 5px; margin-bottom: 10px; }
 
         .emplasemen-container {
-            position: relative;
-            width: 1250px; 
-            height: 600px; 
-            margin: auto;
-            background-image: url('denah.png'); 
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-color: white;
-            border: 2px solid #555;
+            position: relative; width: 1250px; height: 600px; margin: auto;
+            background-image: url('denah.png'); background-size: contain;
+            background-repeat: no-repeat; background-color: white; border: 2px solid #555;
         }
 
         .track-slot {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.5); 
-            border: 1px solid var(--secondary);
-            border-radius: 4px;
-            padding: 2px;
-            display: flex;
-            flex-direction: column; 
-            gap: 2px;
-            z-index: 10;
+            position: absolute; background: rgba(0, 0, 0, 0.5); 
+            border: 1px solid var(--secondary); border-radius: 4px;
+            padding: 2px; display: flex; flex-direction: column; gap: 2px; z-index: 10;
         }
 
-        .unit-container {
-            display: flex; 
-            flex-direction: row; 
-            gap: 4px;
-            overflow-x: auto;
-        }
+        .unit-container { display: flex; flex-direction: row; gap: 4px; overflow-x: auto; }
 
         .unit {
-            background: #fff; color: #000; padding: 2px 6px;
-            font-size: 9px; font-weight: bold; cursor: pointer;
-            border-radius: 2px; text-align: center;
-            white-space: nowrap;
-            border: 1px solid #999;
+            background: #fff; color: #000; padding: 2px 6px; font-size: 9px; 
+            font-weight: bold; cursor: pointer; border-radius: 2px; border: 1px solid #999;
         }
-        /* Style untuk gerbong yang ikut terbawa dalam satu rangkaian */
-        .unit.selected { background: var(--secondary); color: #fff; border-color: #fff; box-shadow: 0 0 5px var(--secondary); }
+        .unit.loco { background: var(--loco); color: white; border-color: #000; }
+        .unit.selected { background: var(--secondary); color: #fff; box-shadow: 0 0 5px var(--secondary); }
 
         .btn-move { font-size: 9px; cursor: pointer; background: var(--success); color: white; border: none; padding: 2px 5px; font-weight: bold; border-radius: 3px; }
-        #log { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 100px; overflow-y: auto; margin-top: 10px; font-size: 12px; border: 1px solid #444; }
+        #log { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 120px; overflow-y: auto; margin-top: 10px; font-size: 11px; border: 1px solid #444; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <strong>SIMULATOR KETAPANG (ADVANCED LOGIC)</strong> | 
+    <strong>SIMULATOR KETAPANG PRO (LOCO & SWITCH LOGIC)</strong> | 
     GERAKAN: <span id="moveCount">0</span> |
     <button onclick="location.reload()" style="background:var(--danger); color:white; border:none; padding:2px 10px; cursor:pointer;">Reset</button>
 </div>
 
 <div class="emplasemen-container" id="map"></div>
-
-<div id="log">>>> Logika Rangkaian Gandeng Aktif. Klik gerbong mana saja untuk menarik seluruh rangkaian di belakangnya...</div>
+<div id="log">>>> Siapkan Lokomotif di DIPO LOKO 2 untuk memulai langsir...</div>
 
 <script>
     const trackConfigs = {
-        "I":   { x: 525, y: 225, w: 300, cap: 14, units: ["K1 08610"] },
-        "II":  { x: 545, y: 275, w: 325, cap: 15, units: ["K1 08611"] },
-        "III": { x: 495, y: 325, w: 345, cap: 16, units: ["K1 08612"] },
-        "IV":  { x: 420, y: 375, w: 370, cap: 15, units: ["K1 08613"] },
-        "V":   { x: 350, y: 425, w: 400, cap: 15, units: ["K1 08614"] },
-        "VI":  { x: 325, y: 475, w: 400, cap: 17, units: ["M1 09401", "P 06802", "4 KRT"] },
+        /* Jalur Utama */
+        "I":   { x: 525, y: 225, w: 300, cap: 14, units: ["K1 08610"], connects: ["8E AGO"] },
+        "II":  { x: 545, y: 275, w: 325, cap: 15, units: ["K1 08611"], connects: ["8E AGO"] },
+        "III": { x: 495, y: 325, w: 345, cap: 16, units: ["K1 08612"], connects: ["8E AGO"] },
+        "IV":  { x: 420, y: 375, w: 370, cap: 15, units: ["K1 08613"], connects: ["8E AGO"] },
+        "V":   { x: 350, y: 425, w: 400, cap: 15, units: ["K1 08614"], connects: ["8E AGO"] },
+        "VI":  { x: 325, y: 475, w: 400, cap: 17, units: ["M1 09401", "P 06802"], connects: ["8E AGO"] },
         
-        "DIPO KRT 1": { x: 50, y: 35, w: 200, cap: 5, units: ["K3 00000", "K3 11111", "K3 22222"] },
-        "DIPO KRT 2": { x: 50, y: 85, w: 200, cap: 7, units: ["K1 08618", "K1 00229"] },
-        "CUCI 1":     { x: 50, y: 140, w: 200, cap: 11, units: ["1 KRT"] },
-        "CUCI 2":     { x: 50, y: 190, w: 200, cap: 11, units: ["2 KRT"] },
+        /* Area Dipo & Cuci (Connect ke Jalur Luncur / Area Manuver Barat) */
+        "DIPO KRT 1": { x: 50, y: 35, w: 200, cap: 5, units: ["K3 00000", "K3 11111", "K3 22222"], connects: ["CUCI 1", "CUCI 2", "DIPO LOKO 1", "DIPO LOKO 2", "JALUR LUNCUR 2"] },
+        "DIPO KRT 2": { x: 50, y: 85, w: 200, cap: 7, units: ["K1 08618"], connects: ["DIPO KRT 1", "CUCI 1", "JALUR LUNCUR 2"] },
+        "CUCI 1":     { x: 50, y: 140, w: 200, cap: 11, units: ["1 KRT"], connects: ["DIPO KRT 1", "JALUR LUNCUR 2"] },
+        "CUCI 2":     { x: 50, y: 190, w: 200, cap: 11, units: ["2 KRT"], connects: ["JALUR LUNCUR 2"] },
         
-        "DIPO LOKO 1": { x: 450, y: 85, w: 180, cap: 5, units: [] },
-        "DIPO LOKO 2": { x: 450, y: 140, w: 180, cap: 5, units: [] },
+        /* Dipo Loko */
+        "DIPO LOKO 1": { x: 450, y: 85, w: 180, cap: 5, units: [], connects: ["DIPO KRT 1", "8E AGO"] },
+        "DIPO LOKO 2": { x: 450, y: 140, w: 180, cap: 5, units: ["LOK CC206"], connects: ["DIPO KRT 1", "8E AGO"] },
 
-        "JALUR LUNCUR 2": { x: 150, y: 275, w: 150, cap: 4, units: [] },
-        "JALUR LUNCUR 3": { x: 150, y: 375, w: 150, cap: 3, units: [] },
-
-        /* Jalur Baru Sesuai Request Kamu */
-        "8E AGO": { x: 1050, y: 275, w: 150, cap: 18, units: [] }
+        /* Jalur Manuver (Penyambung) */
+        "JALUR LUNCUR 2": { x: 150, y: 275, w: 150, cap: 6, units: [], connects: ["DIPO KRT 1", "DIPO KRT 2", "CUCI 1", "CUCI 2", "III"] },
+        "8E AGO": { x: 1050, y: 275, w: 150, cap: 18, units: [], connects: ["I","II","III","IV","V","VI","DIPO LOKO 1","DIPO LOKO 2"] }
     };
 
-    let selectedGroup = []; // Sekarang menyimpan array gerbong
+    // Data Wesel (Simulasi keterangan nomor wesel)
+    const switchData = {
+        "I-8E AGO": "2, 1", "II-8E AGO": "2, 1", "III-8E AGO": "3, 2, 1", "IV-8E AGO": "5, 3, 2, 1", "V-8E AGO": "5A, 5, 3, 2, 1", "VI-8E AGO": "6, 5, 3, 2, 1",
+        "DIPO LOKO 2-8E AGO": "30A, 12, 10, 2, 1", "DIPO LOKO 2-DIPO KRT 1": "30A, 30B, 28A"
+    };
+
+    let selectedGroup = [];
     let fromTrack = null;
     let moveCount = 0;
 
     function render() {
         const map = document.getElementById('map');
         map.innerHTML = '';
-
         for (const [name, data] of Object.entries(trackConfigs)) {
             const slot = document.createElement('div');
             slot.className = 'track-slot';
@@ -113,9 +98,9 @@
             
             data.units.forEach((u, i) => {
                 const unitDiv = document.createElement('div');
-                // Logika Visual: Gerbong ini terpilih jika dia atau gerbong di kirinya diklik
                 const isSelected = (fromTrack === name && selectedGroup.includes(u));
-                unitDiv.className = `unit ${isSelected ? 'selected' : ''}`;
+                const isLoco = u.includes("LOK");
+                unitDiv.className = `unit ${isLoco ? 'loco' : ''} ${isSelected ? 'selected' : ''}`;
                 unitDiv.innerText = u;
                 unitDiv.onclick = () => select(name, i);
                 unitCont.appendChild(unitDiv);
@@ -128,32 +113,44 @@
     }
 
     function select(track, idx) {
-        const trackUnits = trackConfigs[track].units;
-        // Ambil gerbong yang diklik DAN semua gerbong di kanannya (indeks lebih besar)
-        selectedGroup = trackUnits.slice(idx);
+        selectedGroup = trackConfigs[track].units.slice(idx);
         fromTrack = track;
-        addLog(`Siap tarik ${selectedGroup.length} unit dari ${track}`);
         render();
     }
 
     function move(target) {
         if (selectedGroup.length === 0 || target === fromTrack) return;
-        
-        // Cek Kapasitas
-        if (trackConfigs[target].units.length + selectedGroup.length > trackConfigs[target].cap) {
-            addLog(`Gagal: Jalur ${target} tidak muat ${selectedGroup.length} unit!`, "danger");
+
+        // 1. CEK LOGIKA LOKOMOTIF: Apakah ada LOK dalam rangkaian yang dibawa?
+        const hasLoco = selectedGroup.some(u => u.includes("LOK"));
+        if (!hasLoco) {
+            addLog(`Gagal: Rangkaian tidak bisa bergerak tanpa Lokomotif!`, "danger");
             return;
         }
 
-        // Pindahkan seluruh rangkaian
+        // 2. CEK LOGIKA JALUR: Apakah asal dan tujuan terhubung langsung?
+        const isConnected = trackConfigs[fromTrack].connects.includes(target) || trackConfigs[target].connects.includes(fromTrack);
+        if (!isConnected) {
+            addLog(`Gagal: Jalur ${fromTrack} & ${target} tidak terhubung langsung! Gunakan jalur manuver (8E AGO / Luncur).`, "danger");
+            return;
+        }
+
+        if (trackConfigs[target].units.length + selectedGroup.length > trackConfigs[target].cap) {
+            addLog(`Gagal: Jalur ${target} Penuh!`, "danger"); return;
+        }
+
+        // Eksekusi Pindah
         const numToMove = selectedGroup.length;
-        // Hapus dari asal
         trackConfigs[fromTrack].units.splice(trackConfigs[fromTrack].units.length - numToMove, numToMove);
-        // Tambah ke tujuan
         trackConfigs[target].units.push(...selectedGroup);
         
+        // Cari info wesel
+        const route = `${fromTrack}-${target}`;
+        const routeAlt = `${target}-${fromTrack}`;
+        const switches = switchData[route] || switchData[routeAlt] || "??";
+
         moveCount++;
-        addLog(`GERAKAN ${moveCount}: Tarik ${numToMove} unit (${fromTrack} -> ${target})`);
+        addLog(`GERAKAN ${moveCount}: ${numToMove} Unit (${fromTrack} -> ${target}) lewat wesel ${switches}`);
         
         selectedGroup = []; fromTrack = null;
         render();
@@ -161,7 +158,7 @@
 
     function addLog(m, type="") {
         const l = document.getElementById('log');
-        const color = type === "danger" ? "red" : "#0f0";
+        const color = type === "danger" ? "#ff4d4d" : "#0f0";
         l.innerHTML += `<div style="color:${color}">> ${m}</div>`;
         l.scrollTop = l.scrollHeight;
     }
