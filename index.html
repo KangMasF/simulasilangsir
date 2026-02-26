@@ -9,6 +9,7 @@
         body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 10px; }
         .header { text-align: center; background: var(--primary); padding: 10px; border-radius: 5px; margin-bottom: 10px; }
 
+        /* Container Emplasemen */
         .emplasemen-container {
             position: relative;
             width: 1200px; 
@@ -21,18 +22,20 @@
             border: 2px solid #555;
         }
 
+        /* Slot Jalur Interaktif - Dikecilkan sesuai permintaan */
         .track-slot {
             position: absolute;
-            background: rgba(0, 0, 0, 0.5); /* Samar sesuai permintaanmu */
+            background: rgba(0, 0, 0, 0.5); /* Hitam Samar */
             border: 1px solid var(--secondary);
             border-radius: 4px;
-            padding: 2px; /* Lebih tipis */
+            padding: 2px;
             display: flex;
             flex-direction: column; 
-            gap: 2px; /* Lebih rapat */
+            gap: 2px;
             z-index: 10;
         }
 
+        /* Baris Gerbong Menyamping */
         .unit-container {
             display: flex; 
             flex-direction: row; 
@@ -41,7 +44,7 @@
         }
 
         .unit {
-            background: #fff; color: #000; padding: 3px 8px;
+            background: #fff; color: #000; padding: 2px 6px;
             font-size: 9px; font-weight: bold; cursor: pointer;
             border-radius: 2px; text-align: center;
             white-space: nowrap;
@@ -49,7 +52,7 @@
         }
         .unit.selected { background: var(--secondary); color: #fff; border-color: #fff; }
 
-        .btn-move { font-size: 9px; cursor: pointer; background: var(--success); color: white; border: none; padding: 3px; font-weight: bold; border-radius: 3px; }
+        .btn-move { font-size: 9px; cursor: pointer; background: var(--success); color: white; border: none; padding: 2px 5px; font-weight: bold; border-radius: 3px; }
         #log { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 100px; overflow-y: auto; margin-top: 10px; font-size: 12px; border: 1px solid #444; }
     </style>
 </head>
@@ -63,11 +66,11 @@
 
 <div class="emplasemen-container" id="map"></div>
 
-<div id="log">>>> Konfigurasi jalur berhasil diperbarui. Silakan atur koordinat X, Y, W...</div>
+<div id="log">>>> Sistem Siap. Jalur telah diperbarui...</div>
 
 <script>
     const trackConfigs = {
-        /* Jalur Utama I-VI sesuai koordinat barumu */
+        /* Jalur Utama I-VI dengan koordinat presisi kamu */
         "I":   { x: 525, y: 225, w: 300, cap: 14, units: ["K1 08610"] },
         "II":  { x: 545, y: 275, w: 325, cap: 15, units: ["K1 08611"] },
         "III": { x: 495, y: 325, w: 345, cap: 16, units: ["K1 08612"] },
@@ -78,12 +81,14 @@
         /* Area Dipo & Cuci */
         "DIPO KRT 1": { x: 50, y: 35, w: 200, cap: 5, units: ["B 06604", "K3 09304"] },
         "DIPO KRT 2": { x: 50, y: 85, w: 200, cap: 7, units: ["K1 08618", "K1 00229"] },
-        "CUCI 1": { x: 50, y: 140, w: 200, cap: 11, units: ["1 KRT"] },
-        "CUCI 2": { x: 50, y: 190, w: 200, cap: 11, units: ["2 KRT"] },
+        "CUCI 1":     { x: 50, y: 140, w: 200, cap: 11, units: ["1 KRT"] },
+        "CUCI 2":     { x: 50, y: 190, w: 200, cap: 11, units: ["2 KRT"] },
+        
+        /* Dipo Loko */
         "DIPO LOKO 1": { x: 450, y: 85, w: 180, cap: 5, units: [] },
         "DIPO LOKO 2": { x: 450, y: 140, w: 180, cap: 5, units: [] },
 
-        /* 2 JALUR TAMBAHAN (Koordinat Estimasi - Silakan disesuaikan) */
+        /* Jalur Luncur */
         "JALUR LUNCUR 2": { x: 150, y: 275, w: 150, cap: 4, units: [] },
         "JALUR LUNCUR 3": { x: 150, y: 375, w: 150, cap: 3, units: [] }
     };
@@ -130,7 +135,7 @@
 
     function select(track, idx) {
         if (idx !== trackConfigs[track].units.length - 1) {
-            addLog("INFO: Hanya gerbong ujung yang bisa ditarik!");
+            addLog("INFO: Hanya gerbong ujung (paling kanan) yang bisa ditarik!");
             return;
         }
         selectedUnit = trackConfigs[track].units[idx];
@@ -141,7 +146,7 @@
     function move(target) {
         if (!selectedUnit || target === fromTrack) return;
         if (trackConfigs[target].units.length >= trackConfigs[target].cap) {
-            addLog(`ALARM: Jalur ${target} Penuh!`, "danger");
+            addLog(`Gagal: Jalur ${target} Penuh!`, "danger");
             return;
         }
         trackConfigs[fromTrack].units.pop();
