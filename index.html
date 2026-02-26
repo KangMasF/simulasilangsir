@@ -6,60 +6,46 @@
     <title>Digital Twin - Stasiun Ketapang</title>
     <style>
         :root { --primary: #002d5e; --secondary: #f39c12; --danger: #e74c3c; --success: #27ae60; }
-        body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 10px; overflow-x: hidden; }
+        body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 10px; }
         
-        /* Container Utama dengan Gambar Emplasemen */
+        .header { text-align: center; background: var(--primary); padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+
+        /* Container Emplasemen */
         .emplasemen-container {
             position: relative;
-            width: 1200px; /* Lebar gambar */
-            height: 600px; /* Tinggi gambar */
+            width: 1200px; 
+            height: 600px; 
             margin: auto;
-            background-image: url('emplasemenktg.png'); /* Link gambar emplasemen asli kamu */
+            background-image: url('denah.png'); /* Pastikan file sudah di-upload ke GitHub */
             background-size: contain;
             background-repeat: no-repeat;
-            border: 2px solid #555;
             background-color: white;
+            border: 2px solid #555;
         }
 
-        /* Titik Interaktif (Jalur) */
+        /* Slot Jalur Interaktif */
         .track-slot {
             position: absolute;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.7); /* Transparan gelap agar gambar asli tetap terlihat sedikit */
             border: 1px solid var(--secondary);
             border-radius: 4px;
-            padding: 5px;
-            min-width: 120px;
+            padding: 4px;
             display: flex;
             flex-direction: column;
             gap: 2px;
             z-index: 10;
         }
 
-        /* Gerbong/Unit */
         .unit {
             background: #fff; color: #000; padding: 2px 5px;
             font-size: 10px; font-weight: bold; cursor: pointer;
             border-radius: 2px; text-align: center;
         }
-        .unit.selected { background: var(--secondary); color: #fff; box-shadow: 0 0 10px var(--secondary); }
+        .unit.selected { background: var(--secondary); color: #fff; }
 
-        /* Posisi Koordinat Jalur (Akan kita sesuaikan) */
-        #slot-I { top: 195px; left: 550px; }
-        #slot-II { top: 235px; left: 550px; }
-        #slot-III { top: 285px; left: 550px; }
-        #slot-IV { top: 335px; left: 550px; }
-        #slot-V { top: 385px; left: 550px; }
-        #slot-VI { top: 435px; left: 550px; }
-        #slot-DIPO-KRT-1 { top: 35px; left: 140px; }
-        #slot-DIPO-KRT-2 { top: 75px; left: 140px; }
-        #slot-CUCI-1 { top: 115px; left: 140px; }
-        #slot-CUCI-2 { top: 155px; left: 140px; }
-        #slot-WESEL-BARAT { top: 480px; left: 100px; }
-
-        /* UI Penunjang */
-        .header { text-align: center; background: var(--primary); padding: 10px; border-radius: 5px; margin-bottom: 10px; }
-        .btn-move { font-size: 9px; margin-top: 3px; cursor: pointer; background: var(--success); color: white; border: none; }
-        #log { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 100px; overflow-y: auto; margin-top: 10px; font-size: 12px; }
+        .btn-move { font-size: 9px; margin-top: 3px; cursor: pointer; background: var(--success); color: white; border: none; padding: 4px; font-weight: bold; }
+        
+        #log { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 100px; overflow-y: auto; margin-top: 10px; font-size: 12px; border: 1px solid #444; }
     </style>
 </head>
 <body>
@@ -70,22 +56,29 @@
     <button onclick="location.reload()" style="background:var(--danger); color:white; border:none; padding:2px 10px; cursor:pointer;">Reset</button>
 </div>
 
-<div class="emplasemen-container" id="map">
-    </div>
+<div class="emplasemen-container" id="map"></div>
 
-<div id="log">>>> Pilih unit di ujung jalur untuk memulai langsir...</div>
+<div id="log">>>> Atur koordinat X, Y, dan W (Lebar) agar pas dengan jalur di gambar...</div>
 
 <script>
+    /* TIPS ATUR LAYOUT:
+       x = geser kiri/kanan
+       y = geser atas/bawah
+       w = atur panjang/lebar kotak jalur
+    */
     const trackConfigs = {
-        "I": { x: 550, y: 195, cap: 14, units: [] },
-        "II": { x: 550, y: 235, cap: 15, units: [] },
-        "III": { x: 550, y: 285, cap: 16, units: [] },
-        "IV": { x: 550, y: 335, cap: 15, units: [] },
-        "V": { x: 550, y: 385, cap: 15, units: [] },
-        "VI": { x: 550, y: 435, cap: 17, units: ["M1 09401", "P 06802", "4 KRT"] },
-        "DIPO KRT 1": { x: 140, y: 35, cap: 5, units: ["B 06604", "K3 09304"] },
-        "DIPO KRT 2": { x: 140, y: 75, cap: 7, units: ["K1 08618", "K1 00229"] },
-        "LEHER WESEL": { x: 50, y: 480, cap: 20, units: [] }
+        "I":   { x: 457, y: 195, w: 150, cap: 14, units: [] },
+        "II":  { x: 457, y: 235, w: 150, cap: 15, units: [] },
+        "III": { x: 457, y: 285, w: 150, cap: 16, units: [] },
+        "IV":  { x: 457, y: 335, w: 150, cap: 15, units: [] },
+        "V":   { x: 457, y: 385, w: 150, cap: 15, units: [] },
+        "VI":  { x: 457, y: 435, w: 150, cap: 17, units: ["M1 09401", "P 06802", "4 KRT"] },
+        
+        "DIPO KRT 1": { x: 125, y: 35, w: 130, cap: 5, units: ["B 06604", "K3 09304"] },
+        "DIPO KRT 2": { x: 125, y: 85, w: 130, cap: 7, units: ["K1 08618", "K1 00229"] },
+        
+        "CUCI 1": { x: 125, y: 135, w: 130, cap: 11, units: [] },
+        "LEHER WESEL": { x: 50, y: 520, w: 110, cap: 20, units: [] }
     };
 
     let selectedUnit = null;
@@ -101,8 +94,9 @@
             slot.className = 'track-slot';
             slot.style.left = data.x + 'px';
             slot.style.top = data.y + 'px';
+            slot.style.width = data.w + 'px'; // MENGATUR PANJANG KOTAK
 
-            const label = `<div style="font-size:9px; border-bottom:1px solid #777; margin-bottom:3px">${name}</div>`;
+            const label = `<div style="font-size:9px; border-bottom:1px solid #777; margin-bottom:3px; text-align:center">${name}</div>`;
             const units = data.units.map((u, i) => {
                 const isSelected = (selectedUnit === u && fromTrack === name && i === data.units.length - 1);
                 return `<div class="unit ${isSelected ? 'selected' : ''}" onclick="select('${name}', ${i})">${u}</div>`;
@@ -123,6 +117,9 @@
 
     function move(target) {
         if (!selectedUnit || target === fromTrack) return;
+        if (trackConfigs[target].units.length >= trackConfigs[target].cap) {
+            alert("Jalur Penuh!"); return;
+        }
         trackConfigs[fromTrack].units.pop();
         trackConfigs[target].units.push(selectedUnit);
         moveCount++;
