@@ -63,12 +63,22 @@
         "8E AGO": { x: 1050, y: 275, w: 150, cap: 18, units: [], connects: ["I","II","III","IV","V","VI"] }
     };
 
-    const switchData = {
-        "I-8E AGO": "4, 2, 1", "II-8E AGO": "2, 1", "III-8E AGO": "3, 1", "IV-8E AGO": "5, 3, 1", "V-8E AGO": "6, 5A, 5, 3, 1", "VI-8E AGO": "6, 5A, 5, 3, 1",
+const switchData = {
+        // --- ARAH KELUAR (BARAT -> TIMUR) ---
+       "I-8E AGO": "4, 2, 1", "II-8E AGO": "2, 1", "III-8E AGO": "3, 1", "IV-8E AGO": "5, 3, 1", "V-8E AGO": "6, 5A, 5, 3, 1", "VI-8E AGO": "6, 5A, 5, 3, 1",
         "DIPO LOKO-DIPO KRT 1": "30A, 11A, 28A", "DIPO LOKO-DIPO KRT 2": "30A, 11A, 28A", "DIPO LOKO-CUCI 1": "30A, 11A, 11B", "DIPO LOKO-CUCI 2": "30A, 11A, 11B",
         "I-DIPO KRT 1": "9, 10, 12, 11A, 28A", "I-DIPO KRT 2": "9, 10, 12, 11A, 28A", "I-CUCI 1": "9, 10, 12, 11A, 11B", "I-CUCI 2": "9, 10, 12, 11A, 11B", "I-JALUR LUNCUR 2": "9, 10, 14",
         "II-DIPO KRT 1": "7, 9, 10, 12, 11A, 28A", "II-DIPO KRT 2": "7, 9, 10, 12, 11A, 28A", "II-CUCI 1": "7, 9, 10, 12, 11A, 11B", "II-CUCI 2": "7, 9, 10, 12, 11A, 11B", "II-JALUR LUNCUR 2": "7, 8, 14", "II-JALUR LUNCUR 4": "7, 8, 11, 13, 15",
-        "III-JALUR LUNCUR 4": "11, 13, 15", "IV-JALUR LUNCUR 4": "13, 15", "8E AGO-I": "1, 2, 4"
+        "III-JALUR LUNCUR 4": "11, 13, 15", "IV-JALUR LUNCUR 4": "13, 15", 
+
+        // --- ARAH MASUK (KEBALIKANNYA - TIMUR -> BARAT) ---
+        "8E AGO-I": "1, 2, 4", "8E AGO-II": "1, 2", "8E AGO-III": "1, 3", "8E AGO-IV": "1, 3, 5", "8E AGO-V": "1, 3, 5, 5A, 6", "8E AGO-VI": "1, 3, 5, 5A, 6",
+        "DIPO KRT 1-DIPO LOKO": "28A, 11A, 30A", "DIPO KRT 2-DIPO LOKO": "28A, 11A, 30A", "CUCI 1-DIPO LOKO": "11B, 11A, 30A", "CUCI 2-DIPO LOKO": "11B, 11A, 30A",
+        "DIPO KRT 1-I": "28A, 11A, 12, 10, 9", "DIPO KRT 2-I": "28A, 11A, 12, 10, 9", "CUCI 1-I": "11B, 11A, 12, 10, 9", "CUCI 2-I": "11B, 11A, 12, 10, 9", "JALUR LUNCUR 2-I": "14, 10, 9",
+        "DIPO KRT 1-II": "28A, 11A, 12, 10, 9, 7", "DIPO KRT 2-II": "28A, 11A, 12, 10, 9, 7", "CUCI 1-II": "11B, 11A, 12, 10, 9, 7", "CUCI 2-II": "11B, 11A, 12, 10, 9, 7", "JALUR LUNCUR 2-II": "14, 8, 7", "JALUR LUNCUR 4-II": "15, 13, 11, 8, 7",
+        "JALUR LUNCUR 4-III": "15, 13, 11", "JALUR LUNCUR 4-IV": "15, 13"
+        
+       
     };
 
     let selectedGroup = [];
