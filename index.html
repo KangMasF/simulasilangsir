@@ -1,60 +1,95 @@
-<svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1000" height="500" fill="#fcfcfc" />
-  <text x="500" y="30" font-family="Arial" font-size="20" font-weight="bold" text-anchor="middle">EMPLASEMEN KETAPANG (KTG) - KM 18+484</text>
-  
-  <line x1="500" y1="50" x2="500" y2="450" stroke="#999" stroke-dasharray="5,5" />
-  <rect x="440" y="100" width="120" height="60" fill="#ddd" stroke="#333" stroke-width="2" />
-  <text x="500" y="135" font-family="Arial" font-size="12" text-anchor="middle">STASIUN</text>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Langsir KTG</title>
+    <style>
+        body { font-family: sans-serif; background: #333; color: white; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 95%; margin-top: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        svg { width: 100%; height: auto; }
+        
+        /* Gaya Jalur */
+        .track { fill: none; stroke: #2c3e50; stroke-width: 3; stroke-linecap: round; }
+        .main-track { stroke-width: 5; stroke: #000; }
+        .label-text { fill: #000; font-size: 12px; font-weight: bold; }
+        .wesel-node { fill: red; stroke: white; stroke-width: 1; cursor: pointer; }
+        .wesel-node:hover { fill: yellow; }
 
-  <g id="jalur-utama" stroke="#000" stroke-width="3" fill="none">
-    <path id="jalur-1" d="M 300 190 L 700 190" />
-    <text x="500" y="185" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">I</text>
-    
-    <path id="jalur-2" d="M 300 220 L 700 220" />
-    <text x="500" y="215" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">II</text>
-    
-    <path id="jalur-3" d="M 300 250 L 700 250" />
-    <text x="500" y="245" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">III</text>
-    
-    <path id="jalur-4" d="M 300 280 L 700 280" />
-    <text x="500" y="275" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">IV</text>
-    
-    <path id="jalur-5" d="M 300 310 L 700 310" />
-    <text x="500" y="305" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">V</text>
-    
-    <path id="jalur-6" d="M 300 340 L 700 340" />
-    <text x="500" y="335" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">VI</text>
-  </g>
+        /* Animasi sederhana untuk simulasi */
+        .train-unit { fill: #e74c3c; stroke: #c0392b; stroke-width: 1; transition: all 0.5s ease; }
+    </style>
+</head>
+<body>
 
-  <g id="wesel-kiri" stroke="#000" stroke-width="2" fill="none">
-    <path d="M 50 80 L 250 80" id="dipo-kereta-1" />
-    <path d="M 50 110 L 250 110" id="dipo-kereta-2" />
-    <path d="M 50 140 L 250 140" id="jalur-cuci-1" />
-    <path d="M 50 170 L 250 170" id="jalur-cuci-2" />
+    <h2>Simulasi Emplasemen Ketapang (KTG)</h2>
     
-    <path d="M 100 420 Q 50 420 30 380" id="jalur-putar-loop" />
-    <path d="M 100 420 L 280 340" id="jalur-putar-in" />
-    
-    <path d="M 250 80 L 300 190" /> <path d="M 250 170 L 300 220" /> <path d="M 280 340 L 300 340" />
-  </g>
+    <div class="container">
+        <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+            <text x="500" y="30" class="label-text" text-anchor="middle" font-size="20">EMPLASEMEN KETAPANG [cite: 19]</text>
+            <line x1="500" y1="60" x2="500" y2="450" stroke="#ccc" stroke-dasharray="5,5" />
 
-  <g id="wesel-kanan" stroke="#000" stroke-width="2" fill="none">
-    <path d="M 700 190 L 850 250" /> <path d="M 700 220 L 780 220" /> <path d="M 700 340 L 750 340 Q 780 340 850 250" /> <path d="M 580 150 L 680 80" id="jalur-bongkar" />
-    <path d="M 510 350 L 510 420" id="jalur-tangkap" />
-    
-    <path d="M 850 250 L 980 320" stroke-width="4" />
-    <text x="920" y="340" font-family="Arial" font-size="12" fill="#333" transform="rotate(25 920,340)">JEMBER / ARGOPURO</text>
-  </g>
+            <g id="jalur-stasiun">
+                <line id="track-1" class="track main-track" x1="300" y1="180" x2="700" y2="180" />
+                <text x="500" y="175" class="label-text">I</text>
 
-  <g font-family="Arial" font-size="10" fill="blue">
-    <circle cx="280" cy="170" r="3" fill="red" /> <text x="260" y="165">W.10</text>
-    <circle cx="720" cy="210" r="3" fill="red" /> <text x="725" y="205">W.4</text>
-    <circle cx="780" cy="230" r="3" fill="red" /> <text x="785" y="225">W.02</text>
-    <circle cx="200" cy="310" r="3" fill="red" /> <text x="180" y="305">W.15</text>
-    
-    <rect x="380" y="180" width="10" height="170" fill="rgba(0,0,0,0.1)" stroke="#666" />
-    <text x="375" y="365">BH93</text>
-    <rect x="620" y="180" width="10" height="170" fill="rgba(0,0,0,0.1)" stroke="#666" />
-    <text x="615" y="365">BH92</text>
-  </g>
-</svg>
+                <line id="track-2" class="track main-track" x1="300" y1="210" x2="700" y2="210" />
+                <text x="500" y="205" class="label-text">II</text>
+
+                <line id="track-3" class="track main-track" x1="300" y1="240" x2="700" y2="240" />
+                <text x="500" y="235" class="label-text">III</text>
+
+                <line id="track-4" class="track" x1="300" y1="270" x2="700" y2="270" />
+                <text x="500" y="265" class="label-text">IV </text>
+
+                <line id="track-5" class="track" x1="300" y1="300" x2="700" y2="300" />
+                <text x="500" y="295" class="label-text">V </text>
+
+                <line id="track-6" class="track" x1="300" y1="330" x2="700" y2="330" />
+                <text x="500" y="325" class="label-text">VI </text>
+            </g>
+
+            <g id="fasilitas-kiri">
+                <path class="track" d="M 50 80 L 250 80" id="dipo-1" />
+                <text x="60" y="75" class="label-text" font-size="10">JALUR DIPO KERETA 1 [cite: 5]</text>
+                
+                <path class="track" d="M 50 110 L 250 110" id="cuci-1" />
+                <text x="60" y="105" class="label-text" font-size="10">JALUR CUCI 1 [cite: 12, 33]</text>
+
+                <path class="track" d="M 50 400 Q 150 400 280 330" id="jalur-putar" />
+                <text x="60" y="395" class="label-text">JALUR PUTAR </text>
+            </g>
+
+            <g id="fasilitas-kanan">
+                <path class="track" d="M 700 180 L 850 120" id="jalur-bongkar" />
+                <text x="750" y="135" class="label-text">JALUR BONGKAR [cite: 33, 38]</text>
+
+                <path class="track" d="M 700 330 Q 750 330 850 240" />
+                <path class="track main-track" d="M 850 240 L 980 300" id="ke-jember" />
+                <text x="900" y="320" class="label-text" transform="rotate(25 900,320)">KE JEMBER </text>
+            </g>
+
+            <circle class="wesel-node" cx="280" cy="180" r="4" id="W11A" />
+            <circle class="wesel-node" cx="720" cy="180" r="4" id="W4" />
+            
+            <rect id="loco" class="train-unit" x="310" y="205" width="40" height="10" rx="2" />
+        </svg>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button onclick="moveLoco()">Tes Gerak (Langsir)</button>
+        <p><small>Gunakan data Kapasitas Jalur  untuk validasi panjang rangkaian.</small></p>
+    </div>
+
+    <script>
+        function moveLoco() {
+            const loco = document.getElementById('loco');
+            // Simulasi gerak ke Jalur I (y=175)
+            loco.setAttribute('x', '600');
+            loco.setAttribute('y', '175');
+            alert('Lokomotif berpindah posisi untuk langsir!');
+        }
+    </script>
+
+</body>
+</html>
