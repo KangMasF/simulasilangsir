@@ -1,370 +1,60 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Denah Preview — Ketapang Schematic</title>
-<style>
-  body { background:#0d1a10; margin:0; padding:16px; font-family:'Roboto Condensed',Arial,sans-serif; }
-  h3   { color:#7ac87a; margin:0 0 10px; font-size:13px; letter-spacing:1px; }
-  svg  { display:block; background:#0d1a10; border:1px solid #1e4a1e; border-radius:4px; }
-</style>
-</head>
-<body>
-<h3>DENAH SKEMATIK EMPLASEMEN KETAPANG — PREVIEW (gaya metro/subway)</h3>
-<svg viewBox="0 0 1440 580" width="1440" height="580" xmlns="http://www.w3.org/2000/svg">
-<defs>
-  <style>
-    /* ── Tipe garis ── */
-    .r-main  { stroke:#4caf50; stroke-width:3;   fill:none; stroke-linecap:round; stroke-linejoin:round; }
-    .r-dipo  { stroke:#26a69a; stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
-    .r-aux   { stroke:#388e3c; stroke-width:2;   fill:none; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:6,3; }
-    .r-ago   { stroke:#81c784; stroke-width:3;   fill:none; stroke-linecap:round; stroke-linejoin:round; }
+<svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="500" fill="#fcfcfc" />
+  <text x="500" y="30" font-family="Arial" font-size="20" font-weight="bold" text-anchor="middle">EMPLASEMEN KETAPANG (KTG) - KM 18+484</text>
+  
+  <line x1="500" y1="50" x2="500" y2="450" stroke="#999" stroke-dasharray="5,5" />
+  <rect x="440" y="100" width="120" height="60" fill="#ddd" stroke="#333" stroke-width="2" />
+  <text x="500" y="135" font-family="Arial" font-size="12" text-anchor="middle">STASIUN</text>
 
-    /* ── Buffer stop ── */
-    .buf     { stroke:#4caf50; stroke-width:3; }
+  <g id="jalur-utama" stroke="#000" stroke-width="3" fill="none">
+    <path id="jalur-1" d="M 300 190 L 700 190" />
+    <text x="500" y="185" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">I</text>
+    
+    <path id="jalur-2" d="M 300 220 L 700 220" />
+    <text x="500" y="215" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">II</text>
+    
+    <path id="jalur-3" d="M 300 250 L 700 250" />
+    <text x="500" y="245" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">III</text>
+    
+    <path id="jalur-4" d="M 300 280 L 700 280" />
+    <text x="500" y="275" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">IV</text>
+    
+    <path id="jalur-5" d="M 300 310 L 700 310" />
+    <text x="500" y="305" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">V</text>
+    
+    <path id="jalur-6" d="M 300 340 L 700 340" />
+    <text x="500" y="335" font-family="Arial" font-size="14" font-weight="bold" fill="black" text-anchor="middle">VI</text>
+  </g>
 
-    /* ── Wesel dot & label ── */
-    .wdot    { fill:#f5a623; }
-    .wlbl    { font-family:'Roboto Mono','Courier New',monospace; font-size:9px; fill:#f5a623; font-weight:700; }
+  <g id="wesel-kiri" stroke="#000" stroke-width="2" fill="none">
+    <path d="M 50 80 L 250 80" id="dipo-kereta-1" />
+    <path d="M 50 110 L 250 110" id="dipo-kereta-2" />
+    <path d="M 50 140 L 250 140" id="jalur-cuci-1" />
+    <path d="M 50 170 L 250 170" id="jalur-cuci-2" />
+    
+    <path d="M 100 420 Q 50 420 30 380" id="jalur-putar-loop" />
+    <path d="M 100 420 L 280 340" id="jalur-putar-in" />
+    
+    <path d="M 250 80 L 300 190" /> <path d="M 250 170 L 300 220" /> <path d="M 280 340 L 300 340" />
+  </g>
 
-    /* ── Label jalur ── */
-    .jlbl    { font-family:'Roboto Condensed',Arial,sans-serif; font-size:11px; fill:#a5d6a7; font-weight:700; letter-spacing:.5px; }
-    .jlbl-sm { font-family:'Roboto Condensed',Arial,sans-serif; font-size:9px;  fill:#66bb6a; }
+  <g id="wesel-kanan" stroke="#000" stroke-width="2" fill="none">
+    <path d="M 700 190 L 850 250" /> <path d="M 700 220 L 780 220" /> <path d="M 700 340 L 750 340 Q 780 340 850 250" /> <path d="M 580 150 L 680 80" id="jalur-bongkar" />
+    <path d="M 510 350 L 510 420" id="jalur-tangkap" />
+    
+    <path d="M 850 250 L 980 320" stroke-width="4" />
+    <text x="920" y="340" font-family="Arial" font-size="12" fill="#333" transform="rotate(25 920,340)">JEMBER / ARGOPURO</text>
+  </g>
 
-    /* ── S.18 ── */
-    .s18     { stroke:#f5a623; stroke-width:1.2; stroke-dasharray:5,4; }
-    .s18lbl  { font-family:'Roboto Mono',monospace; font-size:9px; fill:#f5a623; }
-
-    /* ── Kompas ── */
-    .komp    { font-family:'Roboto Condensed',Arial,sans-serif; font-size:10px; fill:#2e7d32; }
-  </style>
-</defs>
-
-<!--
-  ╔══════════════════════════════════════════════════════════════════════════════╗
-  ║  KOORDINAT REFERENSI                                                        ║
-  ║  Canvas: 1440 × 580                                                         ║
-  ║                                                                              ║
-  ║  Jalur utama I–VI: y = 200, 240, 280, 320, 360, 400  (step 40px)           ║
-  ║  Ujung barat jalur utama: x = 420  (setelah semua wesel barat selesai)      ║
-  ║  Ujung timur jalur utama: x = 1050 (sebelum wesel timur mulai)             ║
-  ║  S.18 garis: x = 640                                                        ║
-  ║  Wesel timur join point: x bertahap 1050→1180→1240                         ║
-  ║  Area dipo: y = 30–170  (kiri atas)                                         ║
-  ║  Jalur putar: y = 450–530 (kiri bawah)                                      ║
-  ╚══════════════════════════════════════════════════════════════════════════════╝
--->
-
-<!-- ════════════════════════════════════════
-     JALUR UTAMA I – VI  (garis horizontal penuh)
-════════════════════════════════════════ -->
-<!-- Jalur I -->
-<line class="r-main" x1="420" y1="200" x2="1050" y2="200"/>
-<!-- Jalur II -->
-<line class="r-main" x1="420" y1="240" x2="1050" y2="240"/>
-<!-- Jalur III -->
-<line class="r-main" x1="420" y1="280" x2="1050" y2="280"/>
-<!-- Jalur IV -->
-<line class="r-main" x1="420" y1="320" x2="1050" y2="320"/>
-<!-- Jalur V -->
-<line class="r-main" x1="420" y1="360" x2="1050" y2="360"/>
-<!-- Jalur VI -->
-<line class="r-main" x1="420" y1="400" x2="1050" y2="400"/>
-
-<!-- Label jalur utama (di kiri, sebelum x=420) -->
-<text class="jlbl" x="400" y="204" text-anchor="end">I</text>
-<text class="jlbl" x="400" y="244" text-anchor="end">II</text>
-<text class="jlbl" x="400" y="284" text-anchor="end">III</text>
-<text class="jlbl" x="400" y="324" text-anchor="end">IV</text>
-<text class="jlbl" x="400" y="364" text-anchor="end">V</text>
-<text class="jlbl" x="400" y="404" text-anchor="end">VI</text>
-
-<!-- ════════════════════════════════════════
-     S.18 — garis penanda semboyan 18
-════════════════════════════════════════ -->
-<line class="s18" x1="640" y1="175" x2="640" y2="425"/>
-<text class="s18lbl" x="643" y="172">S.18</text>
-<polygon points="640,177 635,187 645,187" fill="#f5a623" opacity=".7"/>
-<polygon points="640,423 635,413 645,413" fill="#f5a623" opacity=".7"/>
-
-<!-- ════════════════════════════════════════
-     SISI TIMUR — wesel 1–6, 5A, jalur AGO
-     Semua jalur menyatu ke wesel 1 → AGO
-════════════════════════════════════════ -->
-<!--
-  Urutan join dari bawah ke atas (VI→I):
-  Jalur VI  y=400  → wesel 6  → bergabung ke y=360 pada x=1090
-  Jalur V   y=360  → wesel 5A → bergabung ke y=320 pada x=1120
-  Jalur IV  y=320  → wesel 5  → bergabung ke y=280 pada x=1150
-  Jalur III y=280  → wesel 3  → bergabung ke y=240 pada x=1180
-  Jalur II  y=240  → wesel 2  → bergabung ke y=220 pada x=1210
-  Jalur I   y=200  → wesel 4  (bongkar) + wesel 2 → ke jalur AGO
-  Semua join → wesel 1 → x=1270 y=215 → AGO
--->
-
-<!-- Cabang join VI → 5A (wesel 6) -->
-<line class="r-main" x1="1050" y1="400" x2="1090" y2="360"/>
-<circle class="wdot" cx="1090" cy="360" r="4.5"/>
-<text class="wlbl" x="1093" y="357">6</text>
-
-<!-- Cabang join V → 3 (wesel 5A) -->
-<line class="r-main" x1="1050" y1="360" x2="1090" y2="360"/>
-<line class="r-main" x1="1090" y1="360" x2="1120" y2="320"/>
-<circle class="wdot" cx="1120" cy="320" r="4.5"/>
-<text class="wlbl" x="1123" y="317">5A</text>
-
-<!-- Cabang join IV (wesel 5) -->
-<line class="r-main" x1="1050" y1="320" x2="1120" y2="320"/>
-<line class="r-main" x1="1120" y1="320" x2="1150" y2="280"/>
-<circle class="wdot" cx="1150" cy="280" r="4.5"/>
-<text class="wlbl" x="1153" y="277">5</text>
-
-<!-- Cabang join III (wesel 3) -->
-<line class="r-main" x1="1050" y1="280" x2="1150" y2="280"/>
-<line class="r-main" x1="1150" y1="280" x2="1180" y2="240"/>
-<circle class="wdot" cx="1180" cy="240" r="4.5"/>
-<text class="wlbl" x="1183" y="237">3</text>
-
-<!-- Cabang join II (wesel 2) -->
-<line class="r-main" x1="1050" y1="240" x2="1180" y2="240"/>
-<line class="r-main" x1="1180" y1="240" x2="1210" y2="215"/>
-<circle class="wdot" cx="1210" cy="215" r="4.5"/>
-<text class="wlbl" x="1213" y="212">2</text>
-
-<!-- Jalur I lurus ke wesel 4, lalu ke wesel 2 join -->
-<line class="r-main" x1="1050" y1="200" x2="1210" y2="215"/>
-
-<!-- Wesel 4 (jalur I → bongkar) -->
-<circle class="wdot" cx="1080" cy="201" r="4.5"/>
-<text class="wlbl" x="1083" y="198">4</text>
-
-<!-- Semua join → wesel 1 → AGO -->
-<line class="r-main" x1="1210" y1="215" x2="1250" y2="215"/>
-<circle class="wdot" cx="1250" cy="215" r="5"/>
-<text class="wlbl" x="1253" y="212">1</text>
-
-<!-- Jalur ke AGO / Jember -->
-<line class="r-ago" x1="1250" y1="215" x2="1430" y2="215"/>
-<!-- Simbol ujung terbuka (keluar stasiun) -->
-<line class="r-ago" x1="1425" y1="208" x2="1435" y2="215"/>
-<line class="r-ago" x1="1425" y1="222" x2="1435" y2="215"/>
-<text class="jlbl" x="1340" y="210">→ ARGOPURO (AGO)</text>
-<text class="jlbl-sm" x="1340" y="222">JEMBER</text>
-
-<!-- Kotak penanda 8E AGO holding area -->
-<rect x="1255" y="204" width="90" height="22" rx="3"
-      fill="rgba(30,80,30,0.4)" stroke="#4caf50" stroke-width="1"/>
-<text class="jlbl-sm" x="1259" y="219">8E AGO</text>
-
-<!-- ════════════════════════════════════════
-     JALUR BONGKAR (dari wesel 4, ke kanan atas)
-════════════════════════════════════════ -->
-<line class="r-aux" x1="1080" y1="201" x2="1080" y2="165"/>
-<line class="r-aux" x1="1080" y1="165" x2="1230" y2="165"/>
-<!-- buffer stop kanan -->
-<line class="buf" x1="1230" y1="160" x2="1230" y2="170"/>
-<text class="jlbl-sm" x="1086" y="161">JALUR BONGKAR</text>
-
-<!-- ════════════════════════════════════════
-     SISI BARAT — wesel 7–15, jalur luncur, hubungan ke dipo
-════════════════════════════════════════ -->
-<!--
-  Wesel 7:  Jalur I & II  berpisah di x=420, ke barat ada percabangan ke luncur/dipo
-  Wesel 8:  pada jalur II, cabang ke jalur luncur 2 & luncur 4
-  Wesel 9:  jalur I — cabang ke dipo
-  Wesel 10: jalur I lebih ke kiri
-  Wesel 11: jalur III/IV — cabang ke luncur 4
-  Wesel 13: jalur IV — luncur 4
-  Wesel 14: jalur luncur 2
-  Wesel 15: jalur luncur 4
-  Wesel 12: dipo loko ke jalur I
--->
-
-<!-- ── Perpanjangan barat jalur I & II ke zona wesel ── -->
-<line class="r-main" x1="260" y1="200" x2="420" y2="200"/>
-<line class="r-main" x1="280" y1="240" x2="420" y2="240"/>
-<line class="r-main" x1="310" y1="280" x2="420" y2="280"/>
-<line class="r-main" x1="340" y1="320" x2="420" y2="320"/>
-<line class="r-main" x1="370" y1="360" x2="420" y2="360"/>
-<line class="r-main" x1="390" y1="400" x2="420" y2="400"/>
-
-<!-- Wesel 7: jalur II bercabang ke luncur 2 arah barat (x=390, y=240) -->
-<circle class="wdot" cx="390" cy="240" r="4.5"/>
-<text class="wlbl" x="374" y="237">7</text>
-<!-- Cabang wesel 7 naik ke jalur luncur 2 di y=220 -->
-<line class="r-main" x1="390" y1="240" x2="350" y2="220"/>
-
-<!-- Wesel 8: jalur luncur 2/4 berpisah (x=350, y=220) -->
-<circle class="wdot" cx="350" cy="220" r="4.5"/>
-<text class="wlbl" x="353" y="218">8</text>
-<!-- Cabang wesel 8 ke bawah: jalur luncur 4 arah (→ wesel 11/13) -->
-<line class="r-main" x1="350" y1="220" x2="330" y2="240"/>
-
-<!-- Wesel 11: jalur III bercabang ke luncur 4 (x=340, y=280) -->
-<circle class="wdot" cx="340" cy="280" r="4.5"/>
-<text class="wlbl" x="343" y="277">11</text>
-<line class="r-main" x1="340" y1="280" x2="330" y2="240"/>
-
-<!-- Wesel 13: jalur IV bercabang ke luncur 4 (x=360, y=320) -->
-<circle class="wdot" cx="360" cy="320" r="4.5"/>
-<text class="wlbl" x="363" y="317">13</text>
-<line class="r-main" x1="360" y1="320" x2="340" y2="280"/>
-
-<!-- Wesel 15: jalur luncur 4 ke buffer (x=390, y=360) -->
-<circle class="wdot" cx="390" cy="360" r="4.5"/>
-<text class="wlbl" x="393" y="357">15</text>
-<line class="r-main" x1="390" y1="360" x2="360" y2="320"/>
-
-<!-- Wesel 9: jalur I cabang ke dipo (x=370, y=200) -->
-<circle class="wdot" cx="370" cy="200" r="4.5"/>
-<text class="wlbl" x="355" y="197">9</text>
-<!-- Cabang wesel 9 naik ke dipo (y=200→180) -->
-<line class="r-dipo" x1="370" y1="200" x2="345" y2="180"/>
-
-<!-- Wesel 10: (x=345, y=180) join dari wesel 9 & 14 (luncur2 timur) -->
-<circle class="wdot" cx="345" cy="180" r="4.5"/>
-<text class="wlbl" x="348" y="178">10</text>
-
-<!-- Wesel 14: jalur luncur 2 berakhir (x=310, y=180) -->
-<circle class="wdot" cx="310" cy="180" r="4.5"/>
-<text class="wlbl" x="313" y="178">14</text>
-<line class="r-main" x1="310" y1="180" x2="345" y2="180"/>
-
-<!-- Jalur luncur 2: dari x=150 ke wesel 14 -->
-<line class="r-aux" x1="130" y1="180" x2="310" y2="180"/>
-<line class="buf" x1="130" y1="175" x2="130" y2="185"/>
-<text class="jlbl-sm" x="135" y="177">JALUR LUNCUR 2</text>
-
-<!-- Wesel 15 ke jalur luncur 4 buffer -->
-<line class="r-aux" x1="130" y1="260" x2="310" y2="260"/>
-<circle class="wdot" cx="310" cy="260" r="4.5"/>
-<text class="wlbl" x="313" y="258">15</text>
-<line class="r-main" x1="310" y1="260" x2="330" y2="240"/>
-<line class="buf" x1="130" y1="255" x2="130" y2="265"/>
-<text class="jlbl-sm" x="135" y="256">JALUR LUNCUR 4</text>
-
-<!-- Wesel 12: dari wesel 10 naik ke dipo loko (x=345,y=180 → x=370,y=155) -->
-<line class="r-dipo" x1="345" y1="180" x2="370" y2="155"/>
-<circle class="wdot" cx="370" cy="155" r="4.5"/>
-<text class="wlbl" x="373" y="153">12</text>
-
-<!-- ════════════════════════════════════════
-     AREA DIPO LOKO 1 & 2
-════════════════════════════════════════ -->
-<!-- Wesel 30A: dipo loko 1 & 2 berpisah (x=370, y=155 → 370,y=135 dan 370,y=155) -->
-<line class="r-dipo" x1="370" y1="155" x2="370" y2="135"/>
-<line class="r-dipo" x1="370" y1="155" x2="370" y2="175"/>
-<circle class="wdot" cx="370" cy="155" r="4.5"/>
-<text class="wlbl" x="373" y="153">30A</text>
-
-<!-- Dipo Loko 1: dari x=370,y=135 ke kanan x=600,y=135 -->
-<line class="r-dipo" x1="370" y1="135" x2="600" y2="135"/>
-<line class="buf" x1="600" y1="129" x2="600" y2="141"/>
-<text class="jlbl-sm" x="375" y="131">JALUR DIPO LOKO 1</text>
-
-<!-- Wesel 30B: dipo loko 2 -->
-<circle class="wdot" cx="370" cy="175" r="4.5"/>
-<text class="wlbl" x="373" y="185">30B</text>
-
-<!-- Dipo Loko 2: dari x=370,y=175 ke kanan x=600,y=175 -->
-<line class="r-dipo" x1="370" y1="175" x2="600" y2="175"/>
-<line class="buf" x1="600" y1="169" x2="600" y2="181"/>
-<text class="jlbl-sm" x="375" y="172">JALUR DIPO LOKO 2</text>
-
-<!-- ════════════════════════════════════════
-     AREA DIPO KERETA & CUCI (kiri atas)
-     Wesel 11A → 28A (dipo KRT) dan 11B (cuci)
-════════════════════════════════════════ -->
-<!--
-  Dari wesel 12 (x=370,y=155) ke kiri → wesel 11A (x=310,y=115)
-  Wesel 11A berpisah ke:
-    - atas: wesel 28A → Dipo KRT 1 & 2
-    - bawah: wesel 11B → Cuci 1 & 2
--->
-
-<!-- Rel dari wesel 12 ke kiri menuju wesel 11A -->
-<line class="r-dipo" x1="310" y1="115" x2="370" y2="155"/>
-<circle class="wdot" cx="310" cy="115" r="4.5"/>
-<text class="wlbl" x="313" y="113">11A</text>
-
-<!-- Wesel 11A ke atas → wesel 28A -->
-<line class="r-dipo" x1="250" y1="80"  x2="310" y2="115"/>
-<circle class="wdot" cx="250" cy="80"  r="4.5"/>
-<text class="wlbl" x="253" y="78">28A</text>
-
-<!-- Dipo KRT 1: dari wesel 28A ke kiri & naik -->
-<line class="r-dipo" x1="50"  y1="50"  x2="250" y2="80"/>
-<line class="buf" x1="50" y1="44" x2="50" y2="56"/>
-<text class="jlbl-sm" x="56" y="47">JALUR DIPO KERETA 1</text>
-
-<!-- Dipo KRT 2: dari wesel 28A ke kiri & turun sedikit -->
-<line class="r-dipo" x1="50"  y1="80"  x2="250" y2="80"/>
-<line class="buf" x1="50" y1="74" x2="50" y2="86"/>
-<text class="jlbl-sm" x="56" y="77">JALUR DIPO KERETA 2</text>
-
-<!-- Wesel 11A ke bawah → wesel 11B (Cuci) -->
-<line class="r-dipo" x1="250" y1="150" x2="310" y2="115"/>
-<circle class="wdot" cx="250" cy="150" r="4.5"/>
-<text class="wlbl" x="253" y="160">11B</text>
-
-<!-- Cuci 1: dari wesel 11B ke kiri -->
-<line class="r-dipo" x1="50"  y1="130" x2="250" y2="150"/>
-<line class="buf" x1="50" y1="124" x2="50" y2="136"/>
-<text class="jlbl-sm" x="56" y="127">JALUR CUCI 1</text>
-
-<!-- Cuci 2: dari wesel 11B ke kiri bawah -->
-<line class="r-dipo" x1="50"  y1="160" x2="250" y2="150"/>
-<line class="buf" x1="50" y1="154" x2="50" y2="166"/>
-<text class="jlbl-sm" x="56" y="170">JALUR CUCI 2</text>
-
-<!-- ════════════════════════════════════════
-     JALUR PUTAR 29B / 29C  (kiri bawah)
-     Masuk dari jalur VI via wesel 16
-════════════════════════════════════════ -->
-<!-- Wesel 16: dari jalur VI (x=390, y=400) turun ke putar -->
-<circle class="wdot" cx="390" cy="400" r="4.5"/>
-<text class="wlbl" x="393" y="410">16</text>
-<line class="r-dipo" x1="390" y1="400" x2="350" y2="440"/>
-
-<!-- Wesel 17 -->
-<circle class="wdot" cx="350" cy="440" r="4.5"/>
-<text class="wlbl" x="353" y="450">17</text>
-<line class="r-dipo" x1="350" y1="440" x2="300" y2="480"/>
-
-<!-- Wesel 18 -->
-<circle class="wdot" cx="300" cy="480" r="4.5"/>
-<text class="wlbl" x="303" y="490">18</text>
-
-<!-- Loop jalur putar: 29B (masuk) dan 29C (keluar via loop) -->
-<path class="r-aux" d="M300,480 Q260,510 200,520 Q130,528 100,510 Q70,490 80,460 Q90,430 130,420 Q180,410 230,420 Q270,430 300,440"/>
-<line class="r-dipo" x1="300" y1="440" x2="350" y2="440"/>
-
-<!-- Label 29B dan 29C -->
-<text class="jlbl-sm" x="84"  y="508">29C</text>
-<text class="jlbl-sm" x="72"  y="462">29B</text>
-<text class="jlbl" x="100" y="548">JALUR PUTAR</text>
-
-<!-- Wesel C (di jalur V arah barat) -->
-<circle class="wdot" cx="370" cy="360" r="4.5"/>
-<text class="wlbl" x="355" y="357">C</text>
-
-<!-- ════════════════════════════════════════
-     JALUR TANGKAP (di bawah VI, sisi timur)
-════════════════════════════════════════ -->
-<line class="r-aux" x1="1050" y1="400" x2="1050" y2="440"/>
-<line class="r-aux" x1="900"  y1="440" x2="1050" y2="440"/>
-<line class="buf"  x1="900" y1="434" x2="900" y2="446"/>
-<text class="jlbl-sm" x="920" y="455">JALUR TANGKAP</text>
-
-<!-- ════════════════════════════════════════
-     KOMPAS & KM
-════════════════════════════════════════ -->
-<text class="komp" x="16"   y="560">← BARAT</text>
-<text class="komp" x="1380" y="560" text-anchor="end">TIMUR →</text>
-<text x="700" y="560" font-family="'Roboto Condensed',Arial" font-size="9" fill="#2e7d32" text-anchor="middle">
-  EMPLASEMEN KETAPANG — KM. 18+484 — SKEMATIK (bukan proporsional)
-</text>
-
+  <g font-family="Arial" font-size="10" fill="blue">
+    <circle cx="280" cy="170" r="3" fill="red" /> <text x="260" y="165">W.10</text>
+    <circle cx="720" cy="210" r="3" fill="red" /> <text x="725" y="205">W.4</text>
+    <circle cx="780" cy="230" r="3" fill="red" /> <text x="785" y="225">W.02</text>
+    <circle cx="200" cy="310" r="3" fill="red" /> <text x="180" y="305">W.15</text>
+    
+    <rect x="380" y="180" width="10" height="170" fill="rgba(0,0,0,0.1)" stroke="#666" />
+    <text x="375" y="365">BH93</text>
+    <rect x="620" y="180" width="10" height="170" fill="rgba(0,0,0,0.1)" stroke="#666" />
+    <text x="615" y="365">BH92</text>
+  </g>
 </svg>
-</body>
-</html>
