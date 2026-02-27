@@ -1,286 +1,256 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulasi Langsir Ketapang v5</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary:   #002244;
-            --panel:     #0a1628;
-            --border:    #1e3a5f;
-            --secondary: #f5a623;
-            --danger:    #d0021b;
-            --success:   #27ae60;
-            --loco:      #1a6fa8;
-            --loco-hi:   #4da3d4;
-            --selected:  #e07b10;
-            --text:      #dce8f5;
-            --sans:      'Roboto Condensed', Arial Narrow, Arial, sans-serif;
-            --mono:      'Roboto Mono', 'Courier New', monospace;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi Langsir Ketapang v6</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --primary:  #002244;
+    --border:   #1e3a5f;
+    --secondary:#f5a623;
+    --danger:   #d0021b;
+    --success:  #27ae60;
+    --loco:     #1a6fa8;
+    --selected: #e07b10;
+    --text:     #dce8f5;
+    --sans:     'Roboto Condensed', Arial Narrow, Arial, sans-serif;
+    --mono:     'Roboto Mono', 'Courier New', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: var(--sans);
-            background: #111820;
-            color: var(--text);
-            padding: 8px;
-            min-height: 100vh;
-        }
+body { font-family: var(--sans); background: #111820; color: var(--text); padding: 8px; min-height: 100vh; }
 
-        /* ─── HEADER ─── */
-        .header {
-            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-            background: var(--primary);
-            border-bottom: 3px solid var(--secondary);
-            padding: 7px 12px;
-            border-radius: 4px 4px 0 0;
-        }
-        .header-title {
-            font-size: 15px; font-weight: 700; letter-spacing: 1.5px; color: #fff;
-            flex: 1;
-        }
-        .header-title span { color: var(--secondary); }
-        .hdr-stat {
-            display: flex; flex-direction: column; align-items: center;
-            min-width: 48px;
-        }
-        .hdr-stat-val { font-size: 20px; font-weight: 700; line-height: 1; color: var(--secondary); font-family: var(--mono); }
-        .hdr-stat-lbl { font-size: 9px; color: #7a9cc0; letter-spacing: 1px; text-transform: uppercase; }
+/* ── HEADER ── */
+.header {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: var(--primary); border-bottom: 3px solid var(--secondary);
+    padding: 6px 12px; border-radius: 4px 4px 0 0;
+}
+.header-title { font-size: 15px; font-weight: 700; letter-spacing: 1.5px; color: #fff; flex: 1; }
+.header-title span { color: var(--secondary); }
+.hdr-stat { display: flex; flex-direction: column; align-items: center; min-width: 44px; }
+.hdr-stat-val { font-size: 20px; font-weight: 700; line-height: 1; color: var(--secondary); font-family: var(--mono); }
+.hdr-stat-lbl { font-size: 9px; color: #7a9cc0; letter-spacing: 1px; text-transform: uppercase; }
+.hdr-divider  { width: 1px; height: 34px; background: var(--border); margin: 0 2px; }
+.hdr-btn {
+    font-family: var(--sans); font-size: 11px; font-weight: 700;
+    border: none; padding: 4px 10px; cursor: pointer; border-radius: 3px;
+    transition: opacity .15s, background .15s; white-space: nowrap;
+}
+.hdr-btn:hover { opacity: .82; }
+.btn-layout  { background: #5a3a00; color: #f5a623; }
+.btn-layout.active { background: #f5a623; color: #000; }
+.btn-snap    { background: #2a2a2a; color: #aaa; }
+.btn-snap.active { background: #1a5a3a; color: #2ecc71; }
+.btn-save    { background: var(--success); color: #fff; }
+.btn-load    { background: #17568a; color: #fff; }
+.btn-export  { background: #444; color: #fff; }
+.btn-reset   { background: var(--danger); color: #fff; }
 
-        .hdr-divider { width: 1px; height: 36px; background: var(--border); margin: 0 4px; }
+/* ── INFO BAR ── */
+.info-bar {
+    background: #07101c; border: 1px solid var(--border); border-top: none;
+    padding: 3px 12px; font-family: var(--mono); font-size: 10px; color: #5a8ab0;
+    display: flex; justify-content: space-between; margin-bottom: 5px;
+}
+.info-bar .hint { color: var(--secondary); font-weight: 700; }
+#layoutLabel { color: #f5a623; font-weight: 700; display: none; }
 
-        .hdr-btn {
-            font-family: var(--sans); font-size: 12px; font-weight: 700;
-            border: none; padding: 5px 12px; cursor: pointer; border-radius: 3px;
-            transition: opacity .15s, background .15s;
-            white-space: nowrap;
-        }
-        .hdr-btn:hover { opacity: .85; }
-        .btn-save    { background: var(--success); color: #fff; }
-        .btn-load    { background: #17568a; color: #fff; }
-        .btn-export  { background: #444; color: #fff; }
-        .btn-reset   { background: var(--danger); color: #fff; }
+/* ── MAP ── */
+.map-wrapper { border: 1px solid var(--border); border-radius: 0 0 3px 3px; overflow-x: auto; background: #fff; line-height: 0; }
+.emplasemen-container {
+    position: relative;
+    width: 1440px; height: 480px;
+    background-image: url('denah.png');
+    background-size: contain;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-color: #ffffff;
+    border: 3px solid #555;
+    border-radius: 8px;
+    user-select: none;
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
 
-        /* ─── INFO BAR ─── */
-        .info-bar {
-            background: #07101c;
-            border: 1px solid var(--border); border-top: none;
-            padding: 4px 12px;
-            font-family: var(--mono); font-size: 10px; color: #5a8ab0;
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 5px;
-        }
-        .info-bar .hint { color: var(--secondary); font-weight: 700; }
+/* ── TRACK SLOT ── */
+.track-slot {
+    position: absolute;
+    background: rgba(0, 10, 28, 0.80);
+    border: 1px solid rgba(100, 160, 220, 0.35);
+    border-radius: 3px; padding: 2px 4px;
+    z-index: 10; backdrop-filter: blur(1px);
+}
+/* Mode layout: slot bisa di-drag, tampil border kuning */
+body.layout-mode .track-slot {
+    border-color: rgba(245,166,35,0.7);
+    cursor: grab;
+}
+body.layout-mode .track-slot:active { cursor: grabbing; }
+body.layout-mode .track-slot .slot-drag-handle {
+    display: flex;
+}
 
-        /* ─── MAP ─── */
-        .map-wrapper {
-            border: 1px solid var(--border);
-            border-radius: 0 0 3px 3px;
-            overflow-x: auto;
-            background: #fff;
-            line-height: 0; /* hapus gap bawah inline img */
-        }
-        /* Container Utama */
-        .emplasemen-container {
-            position: relative; 
-            /* Menggunakan max-width agar tidak pecah di layar kecil */
-            width: 1440px; 
-            height: 480px; 
-            background-image: url('denah.png'); 
-            /* Contain memastikan seluruh denah terlihat tanpa terpotong */
-            background-size: contain; 
-            background-position: center center;
-            background-repeat: no-repeat; 
-            background-color: #ffffff; 
-            border: 3px solid #555;
-            border-radius: 8px;
-            user-select: none;
-            /* Pusatkan kontainer jika layar lebih lebar dari 1440px */
-            margin: 0 auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+.slot-drag-handle {
+    display: none; /* hanya muncul di layout mode */
+    align-items: center; justify-content: center;
+    color: var(--secondary); font-size: 10px;
+    cursor: grab; padding: 0 2px; flex-shrink: 0;
+    line-height: 1;
+}
 
-        /* ─── TRACK SLOT ─── */
-        /* Kompak: satu baris = nama + move buttons + cap + add; baris kedua = unit chips */
-        .track-slot {
-            position: absolute;
-            background: rgba(0, 10, 28, 0.78);
-            border: 1px solid rgba(100, 160, 220, 0.35);
-            border-radius: 3px;
-            padding: 2px 4px;
-            z-index: 10;
-            backdrop-filter: blur(1px);
-        }
+/* Header: drag handle | nama | [move btns] | spacer | cap | + */
+.slot-header {
+    display: flex; align-items: center; gap: 3px;
+    flex-wrap: nowrap; margin-bottom: 2px;
+}
+.slot-name {
+    font-family: var(--sans); font-size: 9px; font-weight: 700;
+    color: #90caff; white-space: nowrap; letter-spacing: .2px; flex-shrink: 0;
+}
+.move-btns-inline { display: flex; gap: 2px; flex-wrap: nowrap; flex: 1; }
+.btn-move {
+    font-family: var(--sans); font-size: 8px; font-weight: 700;
+    background: #0d4a28; color: #2ecc71;
+    border: 1px solid #1a6a35; padding: 1px 4px;
+    border-radius: 2px; cursor: pointer; transition: background .1s; white-space: nowrap; flex-shrink: 0;
+}
+.btn-move:hover { background: #1a6035; }
+.slot-cap { font-family: var(--mono); font-size: 8px; color: rgba(100,160,220,0.5); flex-shrink: 0; }
+.btn-add-unit {
+    font-size: 11px; font-weight: 700; line-height: 1;
+    background: #0a3d1f; color: #2ecc71;
+    border: 1px solid #1a7040; border-radius: 2px;
+    width: 14px; height: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background .1s;
+}
+.btn-add-unit:hover { background: #1a6035; }
 
-        /* Baris atas: nama | tombol pindah | cap | + */
-        .slot-header {
-            display: flex; align-items: center; gap: 3px;
-            flex-wrap: nowrap; margin-bottom: 2px;
-        }
-        .slot-name {
-            font-family: var(--sans); font-size: 9px; font-weight: 700;
-            color: #90caff; white-space: nowrap; letter-spacing: .2px;
-            flex-shrink: 0;
-        }
+/* ── UNIT ROW ── */
+.unit-row { display: flex; flex-direction: row; gap: 2px; min-height: 18px; flex-wrap: nowrap; }
 
-        /* Tombol pindah sejajar di header — muncul saat ada seleksi */
-        .move-btns-inline {
-            display: flex; gap: 2px; flex-wrap: nowrap; flex: 1;
-        }
-        .btn-move {
-            font-family: var(--sans); font-size: 8px; font-weight: 700;
-            background: #0d4a28; color: #2ecc71;
-            border: 1px solid #1a6a35; padding: 1px 4px;
-            border-radius: 2px; cursor: pointer; transition: background .1s;
-            white-space: nowrap; flex-shrink: 0;
-        }
-        .btn-move:hover { background: #1a6035; }
+/* ── UNIT CHIP ── */
+.unit {
+    font-family: var(--mono);
+    background: rgba(220,235,248,0.92); color: #0d1a2a;
+    padding: 1px 5px; font-size: 10px; font-weight: 700;
+    cursor: pointer; border-radius: 2px;
+    border: 1px solid rgba(136,168,200,0.7);
+    white-space: nowrap; flex-shrink: 0; position: relative;
+    transition: box-shadow .08s; display: flex; align-items: center; gap: 2px;
+}
+.unit:hover { box-shadow: 0 1px 5px rgba(0,0,0,.6); }
+.unit.loco { background: var(--loco); color: #fff; border-color: #0f4a7a; }
+.unit.loco .loco-arrow { font-size: 8px; }
+.unit.facing-east .loco-arrow::before { content: '▶'; }
+.unit.facing-west .loco-arrow::before { content: '◀'; }
+.unit.selected {
+    background: var(--selected) !important; color: #fff !important;
+    border-color: #a05000 !important; box-shadow: 0 0 6px rgba(224,123,16,.8);
+}
 
-        .slot-cap {
-            font-family: var(--mono); font-size: 8px;
-            color: rgba(100,160,220,0.5); flex-shrink: 0;
-        }
-        .btn-add-unit {
-            font-size: 11px; font-weight: 700; line-height: 1;
-            background: #0a3d1f; color: #2ecc71;
-            border: 1px solid #1a7040; border-radius: 2px;
-            width: 14px; height: 14px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; transition: background .1s;
-        }
-        .btn-add-unit:hover { background: #1a6035; }
+/* ── DIR HINT ── */
+.dir-hint { font-family: var(--mono); font-size: 7px; color: rgba(80,160,220,0.6); text-align: right; margin-top: 1px; }
 
-        /* ─── UNIT ROW ─── */
-        .unit-row {
-            display: flex; flex-direction: row; gap: 2px;
-            min-height: 18px; flex-wrap: nowrap;
-        }
+/* ── POPUP SHARED ── */
+.popup-base {
+    position: fixed; z-index: 200;
+    background: #0d1e35; border: 1px solid var(--secondary);
+    border-radius: 4px; padding: 10px; width: 260px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.8);
+}
+.popup-base h4 { font-size: 11px; font-weight: 700; color: var(--secondary); margin-bottom: 8px; letter-spacing: .5px; }
+.popup-base label { font-size: 10px; color: #aac0d8; display: block; margin-bottom: 2px; }
+.popup-base select, .popup-base input[type=text], .popup-base input[type=number] {
+    font-family: var(--mono); font-size: 11px;
+    background: #07101c; color: var(--text);
+    border: 1px solid var(--border); border-radius: 2px;
+    padding: 3px 6px; width: 100%; margin-bottom: 6px;
+}
+.popup-base input[type=number] { width: 70px; }
+.preview-box {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    background: #1a3050; color: #fff; text-align: center;
+    padding: 4px; border-radius: 2px; margin-bottom: 7px;
+    max-height: 80px; overflow-y: auto; line-height: 1.6;
+    letter-spacing: .3px; white-space: pre-wrap; word-break: break-all;
+}
+.popup-row { display: flex; gap: 6px; align-items: flex-end; margin-bottom: 6px; }
+.popup-row label { margin-bottom: 0; }
+.popup-btns { display: flex; gap: 5px; }
+.popup-btns button {
+    flex: 1; font-family: var(--sans); font-size: 11px; font-weight: 700;
+    border: none; padding: 4px; border-radius: 2px; cursor: pointer;
+}
+.btn-popup-ok     { background: var(--success); color: #fff; }
+.btn-popup-ok:hover { background: #1e9050; }
+.btn-popup-cancel { background: #333; color: #ccc; }
+.btn-popup-cancel:hover { background: #444; }
 
-        /* ─── UNIT CHIP ─── */
-        .unit {
-            font-family: var(--mono);
-            background: rgba(220, 235, 248, 0.92); color: #0d1a2a;
-            padding: 1px 5px; font-size: 10px; font-weight: 700;
-            cursor: pointer; border-radius: 2px;
-            border: 1px solid rgba(136,168,200,0.7);
-            white-space: nowrap; flex-shrink: 0;
-            position: relative;
-            transition: box-shadow .08s;
-            display: flex; align-items: center; gap: 2px;
-        }
-        .unit:hover { box-shadow: 0 1px 5px rgba(0,0,0,.6); }
+/* Edit list dalam popup */
+.edit-list { max-height: 180px; overflow-y: auto; margin-bottom: 7px; }
+.edit-item { display: flex; gap: 4px; align-items: center; margin-bottom: 3px; }
+.edit-item input {
+    font-family: var(--mono); font-size: 10px;
+    background: #07101c; color: var(--text);
+    border: 1px solid var(--border); border-radius: 2px;
+    padding: 2px 5px; flex: 1;
+}
+.edit-item .chip-preview {
+    font-size: 9px; padding: 1px 4px; border-radius: 2px;
+    background: rgba(220,235,248,0.15); color: #aac0d8; white-space: nowrap;
+}
+.edit-item.is-loco input { border-color: var(--loco); color: #5dade2; }
 
-        .unit.loco {
-            background: var(--loco); color: #fff;
-            border-color: #0f4a7a;
-        }
-        .unit.loco .loco-arrow { font-size: 8px; }
-        .unit.facing-east .loco-arrow::before { content: '▶'; }
-        .unit.facing-west .loco-arrow::before { content: '◀'; }
+/* ── OVERLAY ── */
+#popOverlay { display:none; position:fixed; inset:0; z-index:199; }
 
-        .unit.selected {
-            background: var(--selected) !important;
-            color: #fff !important;
-            border-color: #a05000 !important;
-            box-shadow: 0 0 6px rgba(224,123,16,.8);
-        }
+/* ── CONTEXT MENU ── */
+.ctx-menu {
+    position: fixed; z-index: 300;
+    background: #0d1e35; border: 1px solid var(--secondary);
+    border-radius: 3px; padding: 4px 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,.7); min-width: 170px;
+}
+.ctx-item {
+    padding: 5px 14px; font-size: 11px; cursor: pointer;
+    color: var(--text); font-family: var(--sans); font-weight: 700;
+}
+.ctx-item:hover { background: #1a3050; color: #fff; }
+.ctx-item.danger { color: var(--danger); }
+.ctx-item.danger:hover { background: #3a0010; }
+.ctx-sep { height: 1px; background: var(--border); margin: 3px 0; }
 
-        /* ─── DIRECTION HINT ─── */
-        .dir-hint {
-            font-family: var(--mono); font-size: 7px;
-            color: rgba(80,160,220,0.6);
-            text-align: right; margin-top: 1px;
-        }
+/* ── LOG ── */
+.log-wrap {
+    margin-top: 6px; background: #04080f;
+    border: 1px solid var(--border); border-left: 3px solid var(--secondary);
+    border-radius: 2px; padding: 5px 10px;
+    height: 110px; overflow-y: auto; font-family: var(--mono); font-size: 10px;
+}
+.log-entry { padding: 1px 0; border-bottom: 1px solid rgba(30,58,95,.2); }
+.log-ok   { color: #2ecc71; }
+.log-err  { color: #e74c3c; }
+.log-info { color: #5dade2; }
+.log-edit { color: #f5a623; }
 
-        /* ─── ADD UNIT POPUP ─── */
-        .add-popup {
-            position: absolute; z-index: 100;
-            background: #0d1e35; border: 1px solid var(--secondary);
-            border-radius: 4px; padding: 8px; width: 220px;
-            box-shadow: 0 4px 20px rgba(0,0,0,.7);
-        }
-        .add-popup h4 {
-            font-size: 11px; font-weight: 700; color: var(--secondary);
-            margin-bottom: 6px; letter-spacing: .5px;
-        }
-        .add-popup label { font-size: 10px; color: #aac0d8; display: block; margin-bottom: 2px; }
-        .add-popup select, .add-popup input {
-            font-family: var(--mono); font-size: 11px;
-            background: #07101c; color: var(--text);
-            border: 1px solid var(--border); border-radius: 2px;
-            padding: 3px 6px; width: 100%; margin-bottom: 5px;
-        }
-        .add-popup .preview {
-            font-family: var(--mono); font-size: 12px; font-weight: 700;
-            background: #1a3050; color: #fff; text-align: center;
-            padding: 3px; border-radius: 2px; margin-bottom: 6px;
-            letter-spacing: .5px;
-        }
-        .popup-btns { display: flex; gap: 5px; }
-        .popup-btns button {
-            flex: 1; font-family: var(--sans); font-size: 11px; font-weight: 700;
-            border: none; padding: 4px; border-radius: 2px; cursor: pointer;
-        }
-        .btn-popup-ok  { background: var(--success); color: #fff; }
-        .btn-popup-ok:hover  { background: #1e9050; }
-        .btn-popup-cancel { background: #333; color: #ccc; }
-        .btn-popup-cancel:hover { background: #444; }
-
-        /* ─── LOG ─── */
-        .log-wrap {
-            margin-top: 6px;
-            background: #04080f;
-            border: 1px solid var(--border); border-left: 3px solid var(--secondary);
-            border-radius: 2px; padding: 5px 10px;
-            height: 120px; overflow-y: auto;
-            font-family: var(--mono); font-size: 10px;
-        }
-        .log-entry { padding: 1px 0; border-bottom: 1px solid rgba(30,58,95,.25); }
-        .log-ok   { color: #2ecc71; }
-        .log-err  { color: #e74c3c; }
-        .log-info { color: #5dade2; }
-        .log-edit { color: #f5a623; }
-
-        /* ─── CONTEXT MENU ─── */
-        .ctx-menu {
-            position: fixed; z-index: 200;
-            background: #0d1e35; border: 1px solid var(--secondary);
-            border-radius: 3px; padding: 4px 0;
-            box-shadow: 0 4px 16px rgba(0,0,0,.7);
-            min-width: 140px;
-        }
-        .ctx-item {
-            padding: 5px 14px; font-size: 11px; cursor: pointer; color: var(--text);
-            font-family: var(--sans); font-weight: 700;
-        }
-        .ctx-item:hover { background: #1a3050; color: #fff; }
-        .ctx-item.danger { color: var(--danger); }
-        .ctx-item.danger:hover { background: #3a0010; }
-
-        /* ─── IMPORT FILE ─── */
-        #importFile { display: none; }
-    </style>
+#importFile { display: none; }
+</style>
 </head>
 <body>
 
 <!-- HEADER -->
 <div class="header">
-    <div class="header-title">SIMULATOR LANGSIR <span>KETAPANG</span> <small style="color:#5dade2;font-size:10px;font-weight:400"> v5</small></div>
-
-    <div class="hdr-stat">
-        <div class="hdr-stat-val" id="moveCount">0</div>
-        <div class="hdr-stat-lbl">GERAKAN</div>
-    </div>
-    <div class="hdr-stat">
-        <div class="hdr-stat-val" id="selCount">0</div>
-        <div class="hdr-stat-lbl">DIPILIH</div>
-    </div>
-
+    <div class="header-title">SIMULATOR LANGSIR <span>KETAPANG</span> <small style="color:#5dade2;font-size:10px;font-weight:400"> v6</small></div>
+    <div class="hdr-stat"><div class="hdr-stat-val" id="moveCount">0</div><div class="hdr-stat-lbl">GERAKAN</div></div>
+    <div class="hdr-stat"><div class="hdr-stat-val" id="selCount">0</div><div class="hdr-stat-lbl">DIPILIH</div></div>
     <div class="hdr-divider"></div>
-
+    <button class="hdr-btn btn-layout" id="btnLayout" onclick="toggleLayoutMode()">📐 ATUR POSISI</button>
+    <button class="hdr-btn btn-snap"   id="btnSnap"   onclick="toggleSnap()">⊞ SNAP GRID</button>
+    <div class="hdr-divider"></div>
     <button class="hdr-btn btn-save"   onclick="saveTemplate()">💾 SIMPAN</button>
     <button class="hdr-btn btn-load"   onclick="loadTemplate()">📂 MUAT</button>
     <button class="hdr-btn btn-export" onclick="exportJSON()">⬇ EXPORT</button>
@@ -290,24 +260,29 @@
 </div>
 
 <div class="info-bar">
-    <span id="statusBar">Drag unit untuk memilih rangkaian &nbsp;|&nbsp; <span class="hint">SHIFT+KLIK</span> extend seleksi &nbsp;|&nbsp; <span class="hint">KLIK KANAN</span> untuk hapus/tambah sarana &nbsp;|&nbsp; <span class="hint">+</span> di jalur untuk tambah sarana baru</span>
+    <span id="statusBar">Drag unit untuk memilih | <span class="hint">SHIFT+KLIK</span> extend | <span class="hint">KLIK KANAN</span> opsi sarana | <span class="hint">+</span> tambah sarana</span>
+    <span id="layoutLabel">[ MODE ATUR POSISI — Drag slot ke posisi yang diinginkan ]</span>
 </div>
 
-<!-- MAP -->
 <div class="map-wrapper">
     <div class="emplasemen-container" id="map"></div>
 </div>
 <div class="log-wrap" id="log"></div>
 
-<!-- Context menu (klik kanan) -->
+<!-- Context Menu -->
 <div class="ctx-menu" id="ctxMenu" style="display:none">
-    <div class="ctx-item" id="ctxAdd"    onclick="ctxAddUnit()">➕ Tambah Sarana</div>
-    <div class="ctx-item danger"         onclick="ctxDeleteUnit()">✕ Hapus Sarana Ini</div>
-    <div class="ctx-item"                onclick="ctxClearTrack()">🗑 Kosongkan Jalur</div>
+    <div class="ctx-item" onclick="ctxSelectAll()">☑ Pilih Semua Rangkaian</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="ctxAddUnit()">➕ Tambah Sarana</div>
+    <div class="ctx-item" onclick="ctxEditUnit()">✏️ Edit Nama Sarana</div>
+    <div class="ctx-item danger" onclick="ctxDeleteUnit()">✕ Hapus Sarana Ini</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="ctxEditTrack()">📋 Edit Semua di Jalur Ini</div>
+    <div class="ctx-item danger" onclick="ctxClearTrack()">🗑 Kosongkan Jalur</div>
 </div>
 
-<!-- Add Popup (akan di-inject ke DOM saat diperlukan) -->
-<div id="addPopupOverlay" style="display:none;position:fixed;inset:0;z-index:99" onclick="closePopup(event)"></div>
+<!-- Popup Overlay -->
+<div id="popOverlay" onclick="closePopup(event)"></div>
 
 <script>
 'use strict';
@@ -316,48 +291,38 @@
 //  PRESET SARANA
 // ══════════════════════════════════════════
 const SARANA_TYPES = [
-    { code: 'LOK CC', label: 'Lok CC206 / CC201', prefix: 'LOK CC206 ' },
-    { code: 'LOK BB', label: 'Lok BB302 / BB306', prefix: 'LOK BB302 ' },
-    { code: 'K1',     label: 'Kereta K1 (Eksekutif)', prefix: 'K1 ' },
-    { code: 'K2',     label: 'Kereta K2 (Bisnis)', prefix: 'K2 ' },
-    { code: 'K3',     label: 'Kereta K3 (Ekonomi)', prefix: 'K3 ' },
-    { code: 'M1',     label: 'Kereta Makan M1', prefix: 'M1 ' },
-    { code: 'MP',     label: 'Kereta Makan Pembangkit', prefix: 'MP ' },
-    { code: 'P',      label: 'Kereta Pembangkit', prefix: 'P ' },
-    { code: 'GD',     label: 'Gerbong Datar GD', prefix: 'GD ' },
-    { code: 'PPCW',   label: 'Gerbong PPCW', prefix: 'PPCW ' },
-    { code: 'GDS',    label: 'Gerbong GDS', prefix: 'GDS ' },
-    { code: 'CUSTOM', label: '— Nama Bebas —', prefix: '' },
+    { code:'LOK CC', label:'Lok CC206 / CC201', prefix:'LOK CC206 ' },
+    { code:'LOK BB', label:'Lok BB302 / BB306', prefix:'LOK BB302 ' },
+    { code:'K1',     label:'Kereta K1 (Eksekutif)', prefix:'K1 ' },
+    { code:'K2',     label:'Kereta K2 (Bisnis)',    prefix:'K2 ' },
+    { code:'K3',     label:'Kereta K3 (Ekonomi)',   prefix:'K3 ' },
+    { code:'M1',     label:'Kereta Makan M1',       prefix:'M1 ' },
+    { code:'MP',     label:'Kereta Makan Pembangkit',prefix:'MP ' },
+    { code:'P',      label:'Kereta Pembangkit',     prefix:'P ' },
+    { code:'GD',     label:'Gerbong Datar GD',      prefix:'GD ' },
+    { code:'PPCW',   label:'Gerbong PPCW',          prefix:'PPCW ' },
+    { code:'GDS',    label:'Gerbong GDS',            prefix:'GDS ' },
+    { code:'CUSTOM', label:'— Nama Bebas —',         prefix:'' },
 ];
 
 // ══════════════════════════════════════════
 //  DATA JALUR
 // ══════════════════════════════════════════
 const DEFAULT_TRACKS = {
-    // ── Jalur Utama I–VI ──
-    // Denah asli: I paling atas (utara), VI paling bawah (selatan)
-    // Sisi barat menyambung ke dipo, sisi timur ke AGO
-    // Canvas 1440×480: jalur utama kira-kira di x=420–1050, y=130–380
-    "I":   { x: 430, y: 130, w: 340, cap: 14, units: ["K1 08610"],             westX: 430,  eastX: 770  },
-    "II":  { x: 430, y: 170, w: 360, cap: 15, units: ["K1 08611"],             westX: 430,  eastX: 790  },
-    "III": { x: 400, y: 210, w: 380, cap: 16, units: ["K1 08612"],             westX: 400,  eastX: 780  },
-    "IV":  { x: 360, y: 250, w: 390, cap: 15, units: ["K1 08613"],             westX: 360,  eastX: 750  },
-    "V":   { x: 320, y: 290, w: 400, cap: 15, units: ["K1 08614"],             westX: 320,  eastX: 720  },
-    "VI":  { x: 290, y: 330, w: 410, cap: 17, units: ["M1 09401","P 06802"],   westX: 290,  eastX: 700  },
-
-    // ── Area Dipo (kiri atas / utara) ──
-    "DIPO LOKO":  { x: 410, y: 55,  w: 190, cap: 5,  units: ["LOK CC206 01"],        westX: 410, eastX: 600 },
-    "DIPO KRT 1": { x: 20,  y: 15,  w: 230, cap: 5,  units: ["K3 00000","K3 11111"], westX: 20,  eastX: 250 },
-    "DIPO KRT 2": { x: 20,  y: 50,  w: 230, cap: 7,  units: ["K1 08618"],            westX: 20,  eastX: 250 },
-    "CUCI 1":     { x: 20,  y: 88,  w: 230, cap: 11, units: ["1 KRT"],               westX: 20,  eastX: 250 },
-    "CUCI 2":     { x: 20,  y: 123, w: 230, cap: 11, units: ["2 KRT"],               westX: 20,  eastX: 250 },
-
-    // ── Jalur Luncur (barat, antara dipo dan jalur utama) ──
-    "JALUR LUNCUR 2": { x: 90,  y: 163, w: 150, cap: 6,  units: [], westX: 90,  eastX: 380 },
-    "JALUR LUNCUR 4": { x: 90,  y: 248, w: 150, cap: 6,  units: [], westX: 90,  eastX: 360 },
-
-    // ── 8E AGO (timur / selatan) ──
-    "8E AGO": { x: 1060, y: 148, w: 150, cap: 18, units: [], westX: 1060, eastX: 1240 },
+    "I":   { x:430, y:130, w:340, cap:14, units:["K1 08610"],             westX:430, eastX:770  },
+    "II":  { x:430, y:170, w:360, cap:15, units:["K1 08611"],             westX:430, eastX:790  },
+    "III": { x:400, y:210, w:380, cap:16, units:["K1 08612"],             westX:400, eastX:780  },
+    "IV":  { x:360, y:250, w:390, cap:15, units:["K1 08613"],             westX:360, eastX:750  },
+    "V":   { x:320, y:290, w:400, cap:15, units:["K1 08614"],             westX:320, eastX:720  },
+    "VI":  { x:290, y:330, w:410, cap:17, units:["M1 09401","P 06802"],   westX:290, eastX:700  },
+    "DIPO LOKO":      { x:410, y:55,  w:190, cap:5,  units:["LOK CC206 01"],          westX:410, eastX:600 },
+    "DIPO KRT 1":     { x:20,  y:15,  w:230, cap:5,  units:["K3 00000","K3 11111"],   westX:20,  eastX:250 },
+    "DIPO KRT 2":     { x:20,  y:50,  w:230, cap:7,  units:["K1 08618"],              westX:20,  eastX:250 },
+    "CUCI 1":         { x:20,  y:88,  w:230, cap:11, units:["1 KRT"],                 westX:20,  eastX:250 },
+    "CUCI 2":         { x:20,  y:123, w:230, cap:11, units:["2 KRT"],                 westX:20,  eastX:250 },
+    "JALUR LUNCUR 2": { x:90,  y:163, w:150, cap:6,  units:[],                        westX:90,  eastX:380 },
+    "JALUR LUNCUR 4": { x:90,  y:248, w:150, cap:6,  units:[],                        westX:90,  eastX:360 },
+    "8E AGO":         { x:1060,y:148, w:150, cap:18, units:[],                        westX:1060,eastX:1240},
 };
 
 const CONNECTIONS = {
@@ -403,39 +368,46 @@ const SWITCH_DATA = {
 // ══════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════
-let trackConfigs = deepClone(DEFAULT_TRACKS);
+let trackConfigs  = deepClone(DEFAULT_TRACKS);
 let selectedUnits = [];
-let fromTrack = null;
-let moveCount = 0;
-// editMode dihapus — tambah/hapus sarana via klik kanan & tombol + langsung
+let fromTrack     = null;
+let moveCount     = 0;
+let layoutMode    = false;
+let snapGrid      = false;
+const GRID        = 5;
 
-// context menu state
-let ctxTrack  = null;
+// context menu
+let ctxTrack   = null;
 let ctxUnitIdx = null;
 
-// drag-select state
-let dragState = null;
+// drag-select
+let dragState      = null;
 let dragCurrentIdx = -1;
 
-// add-popup state
-let popupTrack = null;
+// slot drag (layout mode)
+let slotDrag = null; // { name, startMouseX, startMouseY, startSlotX, startSlotY }
 
-function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+// popup
+let popupTrack = null;
+let popupMode  = null; // 'add' | 'edit-unit' | 'edit-track'
+
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 
 // ══════════════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════════════
-function getRelativeDir(from, to) {
-    const fc = (trackConfigs[from].westX + trackConfigs[from].eastX) / 2;
-    const tc = (trackConfigs[to].westX   + trackConfigs[to].eastX)   / 2;
-    return fc < tc ? 'from-west' : 'from-east';
+function getRelativeDir(a, b) {
+    const ac = (trackConfigs[a].westX + trackConfigs[a].eastX) / 2;
+    const bc = (trackConfigs[b].westX + trackConfigs[b].eastX) / 2;
+    return ac < bc ? 'from-west' : 'from-east';
 }
 function isConnected(a, b) {
-    return (CONNECTIONS[a] || []).includes(b) || (CONNECTIONS[b] || []).includes(a);
+    return (CONNECTIONS[a]||[]).includes(b) || (CONNECTIONS[b]||[]).includes(a);
 }
-function getSwitch(from, to) {
-    return SWITCH_DATA[`${from}-${to}`] || SWITCH_DATA[`${to}-${from}`] || 'Jalur Utama';
+function getSwitch(a, b) {
+    return SWITCH_DATA[`${a}-${b}`] || SWITCH_DATA[`${b}-${a}`] || 'Jalur Utama';
 }
+function snapVal(v) { return snapGrid ? Math.round(v / GRID) * GRID : v; }
 
 // ══════════════════════════════════════════
 //  RENDER
@@ -450,7 +422,15 @@ function render() {
         slot.style.cssText = `left:${data.x}px;top:${data.y}px;width:${data.w}px`;
         slot.dataset.track = name;
 
-        // Header row: nama | [tombol pindah inline] | cap | +
+        // ── Drag handle (layout mode) ──
+        const handle = document.createElement('div');
+        handle.className = 'slot-drag-handle';
+        handle.innerHTML = '⠿';
+        handle.title = 'Drag untuk pindah posisi';
+        handle.addEventListener('mousedown', onSlotDragStart);
+        slot.appendChild(handle);
+
+        // ── Header: nama | [move btns] | spacer | cap | + ──
         const hdr = document.createElement('div');
         hdr.className = 'slot-header';
 
@@ -459,21 +439,19 @@ function render() {
         nameEl.innerText = name;
         hdr.appendChild(nameEl);
 
-        // Tombol pindah INLINE — hanya muncul saat jalur ini jadi tujuan valid
         if (selectedUnits.length > 0 && fromTrack && fromTrack !== name && isConnected(fromTrack, name)) {
-            const moveWrap = document.createElement('div');
-            moveWrap.className = 'move-btns-inline';
+            const mw = document.createElement('div');
+            mw.className = 'move-btns-inline';
             const btn = document.createElement('button');
             btn.className = 'btn-move';
-            btn.innerText = `→ SINI`;
+            btn.innerText = '→ SINI';
             btn.onclick = () => move(name);
-            moveWrap.appendChild(btn);
-            hdr.appendChild(moveWrap);
+            mw.appendChild(btn);
+            hdr.appendChild(mw);
         } else {
-            // spacer agar cap & + tetap di kanan
-            const spacer = document.createElement('span');
-            spacer.style.flex = '1';
-            hdr.appendChild(spacer);
+            const sp = document.createElement('span');
+            sp.style.flex = '1';
+            hdr.appendChild(sp);
         }
 
         const capEl = document.createElement('span');
@@ -485,12 +463,12 @@ function render() {
         addBtn.className = 'btn-add-unit';
         addBtn.innerText = '+';
         addBtn.title = 'Tambah sarana';
+        addBtn.addEventListener('mousedown', e => e.stopPropagation());
         addBtn.onclick = (e) => { e.stopPropagation(); openAddPopup(name, addBtn); };
         hdr.appendChild(addBtn);
-
         slot.appendChild(hdr);
 
-        // Unit row
+        // ── Unit row ──
         const row = document.createElement('div');
         row.className = 'unit-row';
 
@@ -498,52 +476,38 @@ function render() {
             const chip = document.createElement('div');
             const isLoco = u.toUpperCase().includes('LOK');
             const isSel  = (fromTrack === name && selectedUnits.includes(u));
-
             let cls = 'unit';
-            if (isLoco) {
-                cls += ' loco';
-                cls += (i === 0) ? ' facing-east' : ' facing-west';
-            }
+            if (isLoco) { cls += ' loco'; cls += (i===0) ? ' facing-east' : ' facing-west'; }
             if (isSel) cls += ' selected';
             chip.className = cls;
             chip.dataset.track = name;
             chip.dataset.idx   = i;
 
-            // Arrow for loco
             if (isLoco) {
-                const arrow = document.createElement('span');
-                arrow.className = 'loco-arrow';
-                chip.appendChild(arrow);
+                const ar = document.createElement('span');
+                ar.className = 'loco-arrow';
+                chip.appendChild(ar);
             }
+            const lbl = document.createElement('span');
+            lbl.innerText = u;
+            chip.appendChild(lbl);
 
-            const label = document.createElement('span');
-            label.innerText = u;
-            chip.appendChild(label);
-
-            // Delete button (klik kanan — tidak perlu tombol × di chip)
-            // Lihat: chip.addEventListener('contextmenu', ...)
-
-            // Drag-select events (hanya saat bukan edit mode)
             chip.addEventListener('mousedown', onUnitMouseDown);
             chip.addEventListener('mouseenter', onUnitMouseEnter);
-
-            // Klik kanan → context menu
             chip.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 showCtxMenu(e.clientX, e.clientY, name, i);
             });
-
             row.appendChild(chip);
         });
         slot.appendChild(row);
 
-        // Direction hint
+        // ── Dir hint ──
         const locoIdx = data.units.findIndex(u => u.toUpperCase().includes('LOK'));
         if (locoIdx >= 0) {
             const hint = document.createElement('div');
             hint.className = 'dir-hint';
-            // Utara=atas=Dipo(barat), Selatan=bawah=AGO(timur)
-            hint.innerText = locoIdx === 0 ? '◀ U | LOK | S ▶' : '◀ U | S ▶ LOK';
+            hint.innerText = locoIdx === 0 ? '◀U | LOK | S▶' : '◀U | S▶ LOK';
             slot.appendChild(hint);
         }
 
@@ -554,22 +518,90 @@ function render() {
     document.getElementById('selCount').innerText  = selectedUnits.length;
 
     const sb = document.getElementById('statusBar');
-    if (fromTrack && selectedUnits.length > 0) {
-        sb.innerText = `Seleksi: ${selectedUnits.length} unit dari [${fromTrack}] — klik tombol → jalur tujuan`;
+    if (layoutMode) {
+        sb.innerText = '';
+    } else if (fromTrack && selectedUnits.length > 0) {
+        sb.innerText = `Seleksi: ${selectedUnits.length} unit dari [${fromTrack}] — klik → SINI di jalur tujuan`;
     } else {
-        sb.innerText = 'Drag unit untuk memilih rangkaian | SHIFT+KLIK extend seleksi | KLIK KANAN sarana untuk hapus/opsi lain | + untuk tambah';
+        sb.innerText = 'Drag unit untuk memilih | SHIFT+KLIK extend | KLIK KANAN opsi sarana | + tambah';
     }
 }
 
 // ══════════════════════════════════════════
-//  DRAG SELECT
+//  LAYOUT MODE — drag slot
+// ══════════════════════════════════════════
+function toggleLayoutMode() {
+    layoutMode = !layoutMode;
+    selectedUnits = []; fromTrack = null;
+    document.body.classList.toggle('layout-mode', layoutMode);
+    document.getElementById('btnLayout').classList.toggle('active', layoutMode);
+    document.getElementById('layoutLabel').style.display = layoutMode ? 'inline' : 'none';
+    addLog(layoutMode ? '📐 Mode Atur Posisi AKTIF — drag slot ke posisi yang tepat' : '📐 Mode Atur Posisi NONAKTIF', 'edit');
+    render();
+}
+
+function toggleSnap() {
+    snapGrid = !snapGrid;
+    document.getElementById('btnSnap').classList.toggle('active', snapGrid);
+    addLog(snapGrid ? '⊞ Snap Grid ON (5px)' : '⊞ Snap Grid OFF', 'edit');
+}
+
+function onSlotDragStart(e) {
+    if (!layoutMode) return;
+    e.preventDefault(); e.stopPropagation();
+    const slot  = e.currentTarget.closest('.track-slot');
+    const name  = slot.dataset.track;
+    const data  = trackConfigs[name];
+    slotDrag = {
+        name,
+        startMouseX: e.clientX,
+        startMouseY: e.clientY,
+        startSlotX:  data.x,
+        startSlotY:  data.y,
+    };
+    slot.style.opacity = '.7';
+    slot.style.zIndex  = '50';
+}
+
+document.addEventListener('mousemove', (e) => {
+    if (!slotDrag) return;
+    const dx   = e.clientX - slotDrag.startMouseX;
+    const dy   = e.clientY - slotDrag.startMouseY;
+    const newX = snapVal(slotDrag.startSlotX + dx);
+    const newY = snapVal(slotDrag.startSlotY + dy);
+    trackConfigs[slotDrag.name].x = Math.max(0, newX);
+    trackConfigs[slotDrag.name].y = Math.max(0, newY);
+    // Update westX/eastX sesuai posisi baru
+    const w = trackConfigs[slotDrag.name].w;
+    trackConfigs[slotDrag.name].westX = trackConfigs[slotDrag.name].x;
+    trackConfigs[slotDrag.name].eastX = trackConfigs[slotDrag.name].x + w;
+    // Gerak langsung tanpa full re-render untuk performa
+    const slot = document.querySelector(`.track-slot[data-track="${slotDrag.name}"]`);
+    if (slot) {
+        slot.style.left = trackConfigs[slotDrag.name].x + 'px';
+        slot.style.top  = trackConfigs[slotDrag.name].y + 'px';
+    }
+});
+
+document.addEventListener('mouseup', (e) => {
+    if (slotDrag) {
+        const slot = document.querySelector(`.track-slot[data-track="${slotDrag.name}"]`);
+        if (slot) { slot.style.opacity = ''; slot.style.zIndex = ''; }
+        addLog(`📐 [${slotDrag.name}] dipindah ke x=${trackConfigs[slotDrag.name].x}, y=${trackConfigs[slotDrag.name].y}`, 'edit');
+        autoSave();
+        slotDrag = null;
+    }
+    dragState = null; dragCurrentIdx = -1;
+});
+
+// ══════════════════════════════════════════
+//  DRAG SELECT (unit)
 // ══════════════════════════════════════════
 function onUnitMouseDown(e) {
-    if (e.button !== 0) return;
+    if (layoutMode || e.button !== 0) return;
     e.preventDefault();
     const track = e.currentTarget.dataset.track;
     const idx   = parseInt(e.currentTarget.dataset.idx);
-
     if (e.shiftKey && fromTrack === track) {
         const units = trackConfigs[track].units;
         const idxs  = selectedUnits.map(u => units.indexOf(u)).filter(i => i >= 0);
@@ -580,7 +612,6 @@ function onUnitMouseDown(e) {
             render(); return;
         }
     }
-
     dragState = { track, startIdx: idx };
     dragCurrentIdx = idx;
     fromTrack = track;
@@ -589,7 +620,7 @@ function onUnitMouseDown(e) {
 }
 
 function onUnitMouseEnter(e) {
-    if (!dragState) return;
+    if (!dragState || layoutMode) return;
     const track = e.currentTarget.dataset.track;
     if (track !== dragState.track) return;
     const idx = parseInt(e.currentTarget.dataset.idx);
@@ -602,219 +633,333 @@ function onUnitMouseEnter(e) {
     render();
 }
 
-document.addEventListener('mouseup', () => { dragState = null; dragCurrentIdx = -1; });
-
-// Klik di luar unit → deselect
-document.getElementById('map') && document.addEventListener('mousedown', (e) => {
-    if (!e.target.closest('.unit') && !e.target.closest('.btn-move') && !e.target.closest('.add-popup') && !e.target.closest('.ctx-menu')) {
-        if (selectedUnits.length > 0) { selectedUnits = []; fromTrack = null; render(); }
-    }
+// Deselect on map click
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('map').addEventListener('mousedown', (e) => {
+        if (!e.target.closest('.unit') && !e.target.closest('.btn-move') && !e.target.closest('.btn-add-unit')) {
+            if (selectedUnits.length > 0 && !layoutMode) { selectedUnits = []; fromTrack = null; render(); }
+        }
+    });
 });
 
 // ══════════════════════════════════════════
 //  MOVE
 // ══════════════════════════════════════════
 function move(target) {
-    if (!selectedUnits.length || !fromTrack || target === fromTrack) return;
-
+    if (layoutMode || !selectedUnits.length || !fromTrack || target === fromTrack) return;
     const hasLoco = selectedUnits.some(u => u.toUpperCase().includes('LOK'));
     if (!hasLoco) { addLog('GAGAL: Tidak ada Lokomotif dalam seleksi!', 'err'); return; }
     if (!isConnected(fromTrack, target)) { addLog(`GAGAL: [${fromTrack}] & [${target}] tidak terhubung!`, 'err'); return; }
-
     const dst = trackConfigs[target].units;
     if (dst.length + selectedUnits.length > trackConfigs[target].cap) {
         addLog(`GAGAL: [${target}] penuh! (${dst.length}/${trackConfigs[target].cap})`, 'err'); return;
     }
-
     const src = trackConfigs[fromTrack].units;
     const dir = getRelativeDir(fromTrack, target);
-
-    // Hapus dari sumber
-    const removeIdxs = selectedUnits.map(u => src.indexOf(u)).sort((a,b)=>b-a);
-    removeIdxs.forEach(i => { if (i>=0) src.splice(i,1); });
-
+    selectedUnits.map(u => src.indexOf(u)).sort((a,b)=>b-a).forEach(i => { if(i>=0) src.splice(i,1); });
     const locoSelIdx = selectedUnits.findIndex(u => u.toUpperCase().includes('LOK'));
-    const locoLeads  = (dir==='from-west' && locoSelIdx === selectedUnits.length-1) ||
-                       (dir==='from-east' && locoSelIdx === 0);
-    const mode = locoLeads ? 'MENARIK' : 'MENDORONG';
-
-    if (dir === 'from-west') {
-        dst.unshift(...selectedUnits);
-    } else {
-        dst.push(...selectedUnits);
-    }
-
-    const sw = getSwitch(fromTrack, target);
+    const leads = (dir==='from-west' && locoSelIdx===selectedUnits.length-1) || (dir==='from-east' && locoSelIdx===0);
+    const mode  = leads ? 'MENARIK' : 'MENDORONG';
+    if (dir === 'from-west') dst.unshift(...selectedUnits);
+    else dst.push(...selectedUnits);
     moveCount++;
-    addLog(`GRK ${moveCount}: [${mode}] ${selectedUnits.length} unit  ${fromTrack} → ${target}  | Wesel: ${sw}`, 'ok');
-
+    addLog(`GRK ${moveCount}: [${mode}] ${selectedUnits.length} unit  ${fromTrack} → ${target}  | Wesel: ${getSwitch(fromTrack,target)}`, 'ok');
     selectedUnits = []; fromTrack = null;
-    autoSave();
-    render();
-}
-
-// ══════════════════════════════════════════
-//  DELETE UNIT
-// ══════════════════════════════════════════
-function deleteUnit(track, idx) {
-    const unit = trackConfigs[track].units[idx];
-    trackConfigs[track].units.splice(idx, 1);
-    addLog(`HAPUS: [${unit}] dari jalur ${track}`, 'edit');
-    autoSave();
-    render();
+    autoSave(); render();
 }
 
 // ══════════════════════════════════════════
 //  CONTEXT MENU
 // ══════════════════════════════════════════
 function showCtxMenu(x, y, track, unitIdx) {
-    ctxTrack   = track;
-    ctxUnitIdx = unitIdx;
-    const menu = document.getElementById('ctxMenu');
-    menu.style.display = 'block';
-    menu.style.left = x + 'px';
-    menu.style.top  = y + 'px';
+    ctxTrack = track; ctxUnitIdx = unitIdx;
+    const m = document.getElementById('ctxMenu');
+    m.style.display = 'block';
+    // Jaga agar tidak keluar layar
+    const mw = 170, mh = 180;
+    m.style.left = (x + mw > window.innerWidth  ? x - mw : x) + 'px';
+    m.style.top  = (y + mh > window.innerHeight ? y - mh : y) + 'px';
 }
 function hideCtxMenu() { document.getElementById('ctxMenu').style.display = 'none'; }
-function ctxAddUnit()    { hideCtxMenu(); openAddPopup(ctxTrack, null); }
-function ctxDeleteUnit() { hideCtxMenu(); if (ctxUnitIdx !== null) deleteUnit(ctxTrack, ctxUnitIdx); }
-function ctxClearTrack() {
-    hideCtxMenu();
-    if (!ctxTrack) return;
-    if (confirm(`Kosongkan semua sarana di jalur [${ctxTrack}]?`)) {
-        trackConfigs[ctxTrack].units = [];
-        addLog(`KOSONGKAN: Jalur ${ctxTrack}`, 'edit');
-        autoSave(); render();
-    }
-}
 document.addEventListener('click', hideCtxMenu);
 
+function ctxSelectAll() {
+    hideCtxMenu();
+    if (!ctxTrack) return;
+    fromTrack = ctxTrack;
+    selectedUnits = [...trackConfigs[ctxTrack].units];
+    addLog(`☑ Semua ${selectedUnits.length} unit di [${ctxTrack}] dipilih`, 'info');
+    render();
+}
+function ctxAddUnit()    { hideCtxMenu(); openAddPopup(ctxTrack, null); }
+function ctxDeleteUnit() {
+    hideCtxMenu();
+    if (ctxUnitIdx === null) return;
+    const unit = trackConfigs[ctxTrack].units[ctxUnitIdx];
+    trackConfigs[ctxTrack].units.splice(ctxUnitIdx, 1);
+    addLog(`HAPUS: [${unit}] dari jalur ${ctxTrack}`, 'edit');
+    autoSave(); render();
+}
+function ctxClearTrack() {
+    hideCtxMenu();
+    if (!ctxTrack || !confirm(`Kosongkan semua sarana di jalur [${ctxTrack}]?`)) return;
+    trackConfigs[ctxTrack].units = [];
+    addLog(`KOSONGKAN: Jalur ${ctxTrack}`, 'edit');
+    autoSave(); render();
+}
+function ctxEditUnit() {
+    hideCtxMenu();
+    if (ctxUnitIdx === null) return;
+    openEditUnitPopup(ctxTrack, ctxUnitIdx);
+}
+function ctxEditTrack() {
+    hideCtxMenu();
+    openEditTrackPopup(ctxTrack);
+}
+
 // ══════════════════════════════════════════
-//  ADD POPUP
+//  POPUP HELPERS
+// ══════════════════════════════════════════
+function showPopup(el, anchorEl) {
+    const ov = document.getElementById('popOverlay');
+    ov.style.display = 'block';
+    ov.appendChild(el);
+    if (anchorEl) {
+        const r = anchorEl.getBoundingClientRect();
+        el.style.left = r.left + 'px';
+        el.style.top  = (r.bottom + 4) + 'px';
+        // Jaga batas layar
+        requestAnimationFrame(() => {
+            const er = el.getBoundingClientRect();
+            if (er.right  > window.innerWidth)  el.style.left = (window.innerWidth  - er.width  - 10) + 'px';
+            if (er.bottom > window.innerHeight) el.style.top  = (window.innerHeight - er.height - 10) + 'px';
+        });
+    } else {
+        el.style.left = '50%'; el.style.top = '40%';
+        el.style.transform = 'translate(-50%,-50%)';
+    }
+}
+
+function closePopup(e) {
+    if (e && e.target !== document.getElementById('popOverlay')) return;
+    _closePopup();
+}
+function _closePopup() {
+    const ov = document.getElementById('popOverlay');
+    ov.style.display = 'none';
+    ov.innerHTML = '';
+    popupTrack = null; popupMode = null;
+}
+
+// ══════════════════════════════════════════
+//  POPUP: TAMBAH SARANA (dengan jumlah)
 // ══════════════════════════════════════════
 function openAddPopup(track, anchorEl) {
-    popupTrack = track;
-    const overlay = document.getElementById('addPopupOverlay');
-    overlay.style.display = 'block';
+    popupTrack = track; popupMode = 'add';
+    const p = document.createElement('div');
+    p.className = 'popup-base';
+    p.id = 'activePopup';
+    p.onclick = e => e.stopPropagation();
 
-    // Build popup
-    const popup = document.createElement('div');
-    popup.className = 'add-popup';
-    popup.id = 'addPopup';
-    popup.onclick = e => e.stopPropagation();
-
-    // Position
-    if (anchorEl) {
-        const rect = anchorEl.getBoundingClientRect();
-        popup.style.position = 'fixed';
-        popup.style.left = rect.left + 'px';
-        popup.style.top  = (rect.bottom + 4) + 'px';
-    } else {
-        popup.style.position = 'fixed';
-        popup.style.left = '50%';
-        popup.style.top  = '40%';
-        popup.style.transform = 'translate(-50%,-50%)';
-    }
-
-    popup.innerHTML = `
+    p.innerHTML = `
         <h4>➕ TAMBAH SARANA — ${track}</h4>
         <label>Tipe Sarana</label>
-        <select id="popTipe" onchange="updatePreview()">
-            ${SARANA_TYPES.map(t => `<option value="${t.code}" data-prefix="${t.prefix}">${t.label}</option>`).join('')}
+        <select id="popTipe" onchange="updateAddPreview()">
+            ${SARANA_TYPES.map(t=>`<option value="${t.code}" data-prefix="${t.prefix}">${t.label}</option>`).join('')}
         </select>
-        <label>Nomor / Nama</label>
-        <input type="text" id="popNomor" placeholder="cth: 08123 atau CC206 01" oninput="updatePreview()" />
-        <select id="popPos">
-            <option value="west">Ujung UTARA (sisi dipo)</option>
-            <option value="east">Ujung SELATAN (sisi AGO)</option>
-        </select>
-        <div class="preview" id="popPreview">—</div>
+        <label>Nomor Awal</label>
+        <input type="text" id="popNomor" placeholder="cth: 08100 atau CC206 01" oninput="updateAddPreview()"/>
+        <div class="popup-row">
+            <div>
+                <label>Jumlah</label>
+                <input type="number" id="popJumlah" value="1" min="1" max="20" oninput="updateAddPreview()" style="width:60px"/>
+            </div>
+            <div style="flex:1">
+                <label>Posisi</label>
+                <select id="popPos" style="margin-bottom:0">
+                    <option value="west">Ujung UTARA (dipo)</option>
+                    <option value="east">Ujung SELATAN (AGO)</option>
+                </select>
+            </div>
+        </div>
+        <label>Preview</label>
+        <div class="preview-box" id="popPreview">—</div>
         <div class="popup-btns">
             <button class="btn-popup-ok"     onclick="confirmAddUnit()">✓ Tambah</button>
-            <button class="btn-popup-cancel" onclick="closePopup()">✕ Batal</button>
+            <button class="btn-popup-cancel" onclick="_closePopup()">✕ Batal</button>
         </div>
     `;
-
-    overlay.appendChild(popup);
-    updatePreview();
+    showPopup(p, anchorEl);
+    updateAddPreview();
     document.getElementById('popNomor').focus();
 }
 
-function updatePreview() {
-    const sel = document.getElementById('popTipe');
+function updateAddPreview() {
+    const sel    = document.getElementById('popTipe');
     if (!sel) return;
-    const opt    = sel.options[sel.selectedIndex];
-    const prefix = opt.dataset.prefix;
-    const nomor  = (document.getElementById('popNomor').value || '').trim();
+    const prefix = sel.options[sel.selectedIndex].dataset.prefix;
     const code   = sel.value;
-    let preview;
-    if (code === 'CUSTOM') {
-        preview = nomor || '—';
-    } else {
-        preview = prefix + (nomor || '?????');
+    const nomor  = (document.getElementById('popNomor').value||'').trim();
+    const jumlah = Math.max(1, parseInt(document.getElementById('popJumlah').value)||1);
+
+    let lines = [];
+    for (let i = 0; i < Math.min(jumlah, 20); i++) {
+        if (code === 'CUSTOM') {
+            lines.push(nomor || '—');
+        } else {
+            // Coba increment nomor jika numerik di akhir
+            const base = nomor || '?????';
+            const match = base.match(/^(.*?)(\d+)$/);
+            if (match && jumlah > 1) {
+                const num = parseInt(match[2]) + i;
+                const pad = match[2].length;
+                lines.push(prefix + match[1] + String(num).padStart(pad, '0'));
+            } else {
+                lines.push(prefix + base + (jumlah > 1 && i > 0 ? ` (${i+1})` : ''));
+            }
+        }
     }
-    document.getElementById('popPreview').innerText = preview;
+    document.getElementById('popPreview').innerText = lines.join('\n');
 }
 
 function confirmAddUnit() {
     const sel    = document.getElementById('popTipe');
-    const opt    = sel.options[sel.selectedIndex];
-    const prefix = opt.dataset.prefix;
+    const prefix = sel.options[sel.selectedIndex].dataset.prefix;
+    const code   = sel.value;
     const nomor  = document.getElementById('popNomor').value.trim();
     const pos    = document.getElementById('popPos').value;
-    const code   = sel.value;
+    const jumlah = Math.max(1, parseInt(document.getElementById('popJumlah').value)||1);
+    const track  = trackConfigs[popupTrack];
 
-    let name;
-    if (code === 'CUSTOM') {
-        name = nomor;
-    } else {
-        name = prefix + (nomor || '?????');
+    if (track.units.length + jumlah > track.cap) {
+        alert(`Kapasitas jalur [${popupTrack}] tidak cukup! Tersisa: ${track.cap - track.units.length} slot.`); return;
     }
 
-    if (!name) { alert('Nama sarana tidak boleh kosong!'); return; }
-
-    const track = trackConfigs[popupTrack];
-    if (track.units.length >= track.cap) {
-        alert(`Jalur [${popupTrack}] sudah penuh (${track.cap} unit)!`); return;
+    const names = [];
+    for (let i = 0; i < jumlah; i++) {
+        let name;
+        if (code === 'CUSTOM') {
+            name = nomor || `SARANA ${i+1}`;
+        } else {
+            const base  = nomor || '?????';
+            const match = base.match(/^(.*?)(\d+)$/);
+            if (match && jumlah > 1) {
+                const num = parseInt(match[2]) + i;
+                const pad = match[2].length;
+                name = prefix + match[1] + String(num).padStart(pad, '0');
+            } else {
+                name = prefix + base + (jumlah > 1 && i > 0 ? ` (${i+1})` : '');
+            }
+        }
+        names.push(name);
     }
 
-    if (pos === 'west') {
-        track.units.unshift(name);
-    } else {
-        track.units.push(name);
-    }
+    if (pos === 'west') track.units.unshift(...names);
+    else track.units.push(...names);
 
-    addLog(`TAMBAH: [${name}] ke jalur ${popupTrack} sisi ${pos === 'west' ? 'UTARA' : 'SELATAN'}`, 'edit');
-    closePopup();
-    autoSave();
-    render();
+    addLog(`TAMBAH: ${jumlah} sarana ke jalur ${popupTrack} sisi ${pos==='west'?'UTARA':'SELATAN'}: ${names.slice(0,3).join(', ')}${names.length>3?'...':''}`, 'edit');
+    _closePopup(); autoSave(); render();
 }
 
-function closePopup(e) {
-    if (e && e.target !== document.getElementById('addPopupOverlay')) return;
-    const overlay = document.getElementById('addPopupOverlay');
-    overlay.style.display = 'none';
-    const existing = document.getElementById('addPopup');
-    if (existing) existing.remove();
-    popupTrack = null;
+// ══════════════════════════════════════════
+//  POPUP: EDIT SATU SARANA
+// ══════════════════════════════════════════
+function openEditUnitPopup(track, idx) {
+    popupTrack = track; popupMode = 'edit-unit';
+    const current = trackConfigs[track].units[idx];
+    const p = document.createElement('div');
+    p.className = 'popup-base';
+    p.id = 'activePopup';
+    p.onclick = e => e.stopPropagation();
+    p.innerHTML = `
+        <h4>✏️ EDIT SARANA — ${track}</h4>
+        <label>Nama Sarana (${idx+1} dari ${trackConfigs[track].units.length})</label>
+        <input type="text" id="editUnitVal" value="${current}" style="margin-bottom:10px"/>
+        <div class="popup-btns">
+            <button class="btn-popup-ok" onclick="confirmEditUnit(${idx})">✓ Simpan</button>
+            <button class="btn-popup-cancel" onclick="_closePopup()">✕ Batal</button>
+        </div>
+    `;
+    showPopup(p, null);
+    const inp = document.getElementById('editUnitVal');
+    inp.focus(); inp.select();
+}
+
+function confirmEditUnit(idx) {
+    const val = document.getElementById('editUnitVal').value.trim();
+    if (!val) { alert('Nama tidak boleh kosong!'); return; }
+    const old = trackConfigs[popupTrack].units[idx];
+    trackConfigs[popupTrack].units[idx] = val;
+    addLog(`EDIT: [${old}] → [${val}] di jalur ${popupTrack}`, 'edit');
+    _closePopup(); autoSave(); render();
+}
+
+// ══════════════════════════════════════════
+//  POPUP: EDIT SEMUA SARANA DI JALUR
+// ══════════════════════════════════════════
+function openEditTrackPopup(track) {
+    popupTrack = track; popupMode = 'edit-track';
+    const units = trackConfigs[track].units;
+    const p = document.createElement('div');
+    p.className = 'popup-base';
+    p.id = 'activePopup';
+    p.style.width = '300px';
+    p.onclick = e => e.stopPropagation();
+
+    const listHTML = units.map((u, i) => {
+        const isLoco = u.toUpperCase().includes('LOK');
+        return `<div class="edit-item ${isLoco?'is-loco':''}">
+            <span class="chip-preview">${i+1}</span>
+            <input type="text" id="editTrack_${i}" value="${u}"/>
+        </div>`;
+    }).join('');
+
+    p.innerHTML = `
+        <h4>📋 EDIT SEMUA SARANA — ${track} (${units.length} unit)</h4>
+        <div class="edit-list">${listHTML || '<div style="color:#5a8ab0;font-size:10px;padding:4px">Jalur kosong</div>'}</div>
+        <div class="popup-btns">
+            <button class="btn-popup-ok" onclick="confirmEditTrack()">✓ Simpan Semua</button>
+            <button class="btn-popup-cancel" onclick="_closePopup()">✕ Batal</button>
+        </div>
+    `;
+    showPopup(p, null);
+    if (units.length > 0) document.getElementById('editTrack_0').focus();
+}
+
+function confirmEditTrack() {
+    const units = trackConfigs[popupTrack].units;
+    let changed = 0;
+    units.forEach((u, i) => {
+        const inp = document.getElementById(`editTrack_${i}`);
+        if (!inp) return;
+        const val = inp.value.trim();
+        if (val && val !== u) { units[i] = val; changed++; }
+    });
+    addLog(`EDIT: ${changed} sarana diubah di jalur ${popupTrack}`, 'edit');
+    _closePopup(); autoSave(); render();
 }
 
 // ══════════════════════════════════════════
 //  SAVE / LOAD / EXPORT / IMPORT
 // ══════════════════════════════════════════
-const STORAGE_KEY = 'langsir_ketapang_v5';
+const STORAGE_KEY = 'langsir_ketapang_v6';
 
 function getSnapshot() {
     const snap = {};
     for (const [k, v] of Object.entries(trackConfigs)) {
-        snap[k] = { units: [...v.units] };
+        snap[k] = { units:[...v.units], x:v.x, y:v.y, w:v.w };
     }
-    return { tracks: snap, moveCount, savedAt: new Date().toISOString() };
+    return { tracks:snap, moveCount, savedAt:new Date().toISOString() };
 }
 
 function applySnapshot(snap) {
     for (const [k, v] of Object.entries(snap.tracks)) {
-        if (trackConfigs[k]) trackConfigs[k].units = [...(v.units || [])];
+        if (!trackConfigs[k]) continue;
+        trackConfigs[k].units = [...(v.units||[])];
+        // Restore posisi jika ada
+        if (v.x !== undefined) { trackConfigs[k].x = v.x; trackConfigs[k].westX = v.x; }
+        if (v.y !== undefined)   trackConfigs[k].y = v.y;
+        if (v.w !== undefined) { trackConfigs[k].w = v.w; trackConfigs[k].eastX = v.x + v.w; }
     }
     moveCount = snap.moveCount || 0;
 }
@@ -825,8 +970,7 @@ function autoSave() {
 
 function saveTemplate() {
     autoSave();
-    addLog('💾 Template disimpan ke browser (LocalStorage)', 'info');
-    // Animasi tombol
+    addLog('💾 Tersimpan ke browser', 'info');
     const btn = document.querySelector('.btn-save');
     btn.innerText = '✅ TERSIMPAN';
     setTimeout(() => { btn.innerText = '💾 SIMPAN'; }, 1500);
@@ -834,87 +978,77 @@ function saveTemplate() {
 
 function loadTemplate() {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) { addLog('Tidak ada template tersimpan di browser ini.', 'err'); return; }
+    if (!raw) { addLog('Tidak ada template tersimpan.', 'err'); return; }
     try {
         const snap = JSON.parse(raw);
         applySnapshot(snap);
         selectedUnits = []; fromTrack = null;
-        addLog(`📂 Template dimuat (disimpan: ${new Date(snap.savedAt).toLocaleString('id-ID')})`, 'info');
+        addLog(`📂 Template dimuat (${new Date(snap.savedAt).toLocaleString('id-ID')})`, 'info');
         render();
-    } catch(e) { addLog('Gagal memuat template: data rusak.', 'err'); }
+    } catch(e) { addLog('Gagal memuat template.', 'err'); }
 }
 
 function exportJSON() {
-    const snap = getSnapshot();
-    const blob = new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(getSnapshot(),null,2)],{type:'application/json'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href     = url;
-    a.download = `langsir_ketapang_${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    addLog('⬇ Template diekspor sebagai file JSON', 'info');
+    a.href = url;
+    a.download = `langsir_ktg_${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    addLog('⬇ Export JSON selesai', 'info');
 }
 
 function importJSON(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
+    const file = e.target.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = ev => {
         try {
-            const snap = JSON.parse(ev.target.result);
-            applySnapshot(snap);
+            applySnapshot(JSON.parse(ev.target.result));
             selectedUnits = []; fromTrack = null;
-            addLog(`⬆ Template diimpor dari file: ${file.name}`, 'info');
-            render();
-        } catch(_) { addLog('Gagal impor: file tidak valid.', 'err'); }
+            addLog(`⬆ Import: ${file.name}`, 'info'); render();
+        } catch(_) { addLog('Gagal import: file tidak valid.', 'err'); }
     };
-    reader.readAsText(file);
-    e.target.value = '';
+    r.readAsText(file); e.target.value = '';
 }
 
 function confirmReset() {
-    if (!confirm('Reset simulator ke kondisi awal? Seluruh posisi sarana akan dikembalikan.')) return;
-    trackConfigs  = deepClone(DEFAULT_TRACKS);
+    if (!confirm('Reset ke kondisi awal?')) return;
+    trackConfigs = deepClone(DEFAULT_TRACKS);
     selectedUnits = []; fromTrack = null; moveCount = 0;
     addLog('↺ Reset ke kondisi awal.', 'info');
-    autoSave();
-    render();
+    autoSave(); render();
 }
 
 // ══════════════════════════════════════════
 //  LOG
 // ══════════════════════════════════════════
 function addLog(msg, type='info') {
-    const log  = document.getElementById('log');
-    const el   = document.createElement('div');
+    const log = document.getElementById('log');
+    const el  = document.createElement('div');
     el.className = `log-entry log-${type}`;
-    const now  = new Date();
-    const ts   = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    const n = new Date();
+    const ts = `${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`;
     el.innerText = `[${ts}] ${msg}`;
-    log.appendChild(el);
-    log.scrollTop = log.scrollHeight;
+    log.appendChild(el); log.scrollTop = log.scrollHeight;
 }
 
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-// Coba load auto-save
 (function init() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
         try {
             const snap = JSON.parse(raw);
             applySnapshot(snap);
-            addLog(`📂 Auto-load template terakhir (${new Date(snap.savedAt).toLocaleString('id-ID')})`, 'info');
+            addLog(`📂 Auto-load (${new Date(snap.savedAt).toLocaleString('id-ID')})`, 'info');
         } catch(_) {}
     }
-    addLog('Simulator Langsir Ketapang v5 — Taruh denah.png satu folder dengan file ini. Klik kanan sarana untuk hapus, + untuk tambah.', 'info');
+    addLog('Simulator Langsir Ketapang v6 — 📐 Atur Posisi untuk geser slot | Klik kanan untuk opsi sarana.', 'info');
     render();
 
-    // Deselect jika klik di peta tapi bukan unit
     document.getElementById('map').addEventListener('mousedown', (e) => {
-        if (!e.target.closest('.unit') && !e.target.closest('.btn-move') && !e.target.closest('.btn-add-unit')) {
+        if (!layoutMode && !e.target.closest('.unit') && !e.target.closest('.btn-move') && !e.target.closest('.btn-add-unit')) {
             if (selectedUnits.length > 0) { selectedUnits = []; fromTrack = null; render(); }
         }
     });
