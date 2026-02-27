@@ -79,8 +79,8 @@ body { font-family: var(--sans); background: #111820; color: var(--text); paddin
 .track-slot {
     position: absolute;
     background: rgba(0, 10, 28, 0.80);
-    border: 1px solid rgba(100, 160, 220, 0.35);
-    border-radius: 1px; padding: 1px 1px;
+    border: 0px solid rgba(100, 160, 220, 0.35);
+    border-radius: 2px; padding: 0px 0px;
     z-index: 10; backdrop-filter: blur(1px);
 }
 /* Mode layout: slot bisa di-drag, tampil border kuning */
@@ -103,8 +103,8 @@ body.layout-mode .track-slot .slot-drag-handle {
 
 /* Header: drag handle | nama | [move btns] | spacer | cap | + */
 .slot-header {
-    display: flex; align-items: center; gap: 3px;
-    flex-wrap: nowrap; margin-bottom: 2px;
+    display: flex; align-items: center; gap: 0px;
+    flex-wrap: nowrap; margin-bottom: 0px;
 }
 .slot-name {
     font-family: var(--sans); font-size: 9px; font-weight: 700;
@@ -130,15 +130,15 @@ body.layout-mode .track-slot .slot-drag-handle {
 .btn-add-unit:hover { background: #1a6035; }
 
 /* ── UNIT ROW ── */
-.unit-row { display: flex; flex-direction: row; gap: 2px; min-height: 18px; flex-wrap: nowrap; }
+.unit-row { display: flex; flex-direction: row; gap: 1px; min-height: 12px; flex-wrap: nowrap; }
 
 /* ── UNIT CHIP ── */
 .unit {
     font-family: var(--mono);
     background: rgba(220,235,248,0.92); color: #0d1a2a;
-    padding: 1px 5px; font-size: 10px; font-weight: 700;
+    padding: 1px 1px; font-size: 8px; font-weight: 700;
     cursor: pointer; border-radius: 2px;
-    border: 1px solid rgba(136,168,200,0.7);
+    border: 0px solid rgba(136,168,200,0.7);
     white-space: nowrap; flex-shrink: 0; position: relative;
     transition: box-shadow .08s; display: flex; align-items: center; gap: 2px;
 }
