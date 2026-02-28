@@ -451,7 +451,9 @@ function render() {
 
         const capEl = document.createElement('span');
         capEl.className = 'slot-cap';
-        capEl.innerText = `${data.units.length}/${data.cap}`;
+        const nonLocoCount = data.units.filter(u => !u.toUpperCase().includes('LOK')).length;
+        capEl.innerText = `${nonLocoCount}/${data.cap}`;
+        capEl.title = 'Kapasitas kereta (lok tidak dihitung)';
         hdr.appendChild(capEl);
 
         const addBtn = document.createElement('button');
@@ -634,8 +636,10 @@ function move(target) {
     if (!hasLoco) { addLog('GAGAL: Tidak ada Lokomotif dalam seleksi!', 'err'); return; }
     if (!isConnected(fromTrack, target)) { addLog(`GAGAL: [${fromTrack}] & [${target}] tidak terhubung!`, 'err'); return; }
     const dst = trackConfigs[target].units;
-    if (dst.length + selectedUnits.length > trackConfigs[target].cap) {
-        addLog(`GAGAL: [${target}] penuh! (${dst.length}/${trackConfigs[target].cap})`, 'err'); return;
+    const dstNonLoco = dst.filter(u => !u.toUpperCase().includes('LOK')).length;
+    const selNonLoco = selectedUnits.filter(u => !u.toUpperCase().includes('LOK')).length;
+    if (dstNonLoco + selNonLoco > trackConfigs[target].cap) {
+        addLog(`GAGAL: [${target}] penuh untuk kereta! (${dstNonLoco}/${trackConfigs[target].cap} kereta, lok tidak dihitung)`, 'err'); return;
     }
     const src = trackConfigs[fromTrack].units;
     const dir = getRelativeDir(fromTrack, target);
@@ -788,9 +792,12 @@ function confirmAddUnit() {
     const pos    = document.getElementById('popPos').value;
     const jumlah = Math.max(1, parseInt(document.getElementById('popJumlah').value)||1);
     const track  = trackConfigs[popupTrack];
-
-    if (track.units.length + jumlah > track.cap) {
-        alert(`Kapasitas tidak cukup! Tersisa: ${track.cap - track.units.length} slot.`); return;
+    const currentNonLoco = track.units.filter(u => !u.toUpperCase().includes('LOK')).length;
+    // Hitung berapa unit non-lok dalam batch yang akan ditambahkan
+    const isLocoType = code === 'LOK CC' || code === 'LOK BB';
+    const addingNonLoco = isLocoType ? 0 : jumlah;
+    if (currentNonLoco + addingNonLoco > track.cap) {
+        alert(`Kapasitas kereta tidak cukup! Tersisa: ${track.cap - currentNonLoco} slot kereta (lok tidak dihitung).`); return;
     }
     const names = [];
     for (let i = 0; i < jumlah; i++) {
