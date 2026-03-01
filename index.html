@@ -134,7 +134,7 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
     background: rgba(220,235,248,0.92); color: #0d1a2a;
     padding: 1px 1px; font-size: 8px; font-weight: 700;
     cursor: pointer; border-radius: 2px;
-    border: 2px solid rgba(100, 130, 170, 0.7);
+    border: 0px solid rgba(136,168,200,0.7);
     white-space: nowrap; flex-shrink: 0; position: relative;
     transition: box-shadow .08s; display: flex; align-items: center; gap: 2px;
 }
@@ -150,6 +150,50 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 
 /* ── DIR HINT ── */
 .dir-hint { font-family: var(--mono); font-size: 7px; color: rgba(80,160,220,0.55); text-align: right; }
+
+/* ── UNDO / REDO ── */
+.hdr-undo-wrap { display: flex; gap: 3px; align-items: center; }
+.btn-undo {
+    font-size: 14px; background: none; border: 1px solid #1e3a5f;
+    color: #7a9cc0; border-radius: 3px; width: 26px; height: 26px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .12s, color .12s; line-height: 1; padding: 0;
+}
+.btn-undo:hover:not(:disabled) { background: #1a3050; color: #fff; }
+.btn-undo:disabled { opacity: .25; cursor: default; }
+.btn-undo.can-act { color: var(--secondary); border-color: var(--secondary); }
+
+/* ── WARNA SARANA (chip tint) ── */
+.unit[data-color="merah"]    { background: rgba(220,60,60,0.88)   !important; color:#fff !important; }
+.unit[data-color="hijau"]    { background: rgba(34,139,34,0.90)   !important; color:#fff !important; }
+.unit[data-color="biru"]     { background: rgba(30,100,200,0.90)  !important; color:#fff !important; }
+.unit[data-color="kuning"]   { background: rgba(210,170,0,0.92)   !important; color:#000 !important; }
+.unit[data-color="oranye"]   { background: rgba(220,100,0,0.92)   !important; color:#fff !important; }
+.unit[data-color="ungu"]     { background: rgba(130,50,180,0.92)  !important; color:#fff !important; }
+.unit[data-color="abu"]      { background: rgba(100,110,120,0.88) !important; color:#fff !important; }
+.unit[data-color="pink"]     { background: rgba(210,80,150,0.90)  !important; color:#fff !important; }
+
+/* warna tetap terlihat walau selected */
+.unit.selected[data-color]   { filter: brightness(1.25) saturate(1.3); }
+
+/* Sub-menu warna di context menu */
+.ctx-color-row {
+    display: flex; gap: 5px; padding: 5px 14px; align-items: center; flex-wrap: wrap;
+}
+.ctx-color-swatch {
+    width: 18px; height: 18px; border-radius: 3px; cursor: pointer;
+    border: 2px solid transparent; transition: transform .1s, border-color .1s;
+    flex-shrink: 0;
+}
+.ctx-color-swatch:hover { transform: scale(1.25); border-color: #fff; }
+.ctx-color-swatch.active { border-color: #fff; transform: scale(1.2); }
+.ctx-color-clear {
+    font-size: 9px; font-family: var(--sans); font-weight: 700;
+    background: #1a1a2a; border: 1px solid #444; color: #aaa;
+    border-radius: 2px; padding: 1px 4px; cursor: pointer;
+    white-space: nowrap;
+}
+.ctx-color-clear:hover { background: #2a2a3a; color: #fff; }
 
 /* ── POPUP ── */
 .popup-base {
@@ -249,6 +293,9 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
     <div class="ctx-item" onclick="ctxEditUnit()">✏️ Edit Nama Sarana Ini</div>
     <div class="ctx-item danger" onclick="ctxDeleteUnit()">✕ Hapus Sarana Ini</div>
     <div class="ctx-sep"></div>
+    <div class="ctx-item" style="font-size:10px;color:#7a9cc0;padding-bottom:2px;cursor:default">🎨 Tandai Warna:</div>
+    <div class="ctx-color-row" id="ctxColorRow"></div>
+    <div class="ctx-sep"></div>
     <div class="ctx-item" onclick="ctxEditTrack()">📋 Edit Semua di Jalur Ini</div>
     <div class="ctx-item danger" onclick="ctxClearTrack()">🗑 Kosongkan Jalur</div>
 </div>
@@ -263,8 +310,8 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 //  true  = tampil  |  false = sembunyi
 // ══════════════════════════════════════════
 const MENU_VISIBILITY = {
-    aturPosisi:   false,   // tombol 📐 ATUR POSISI (drag slot)
-    snapGrid:     false,   // tombol ⊞ SNAP GRID
+    aturPosisi:   true,   // tombol 📐 ATUR POSISI (drag slot)
+    snapGrid:     true,   // tombol ⊞ SNAP GRID
     simpan:       true,   // tombol 💾 SIMPAN
     muat:         true,   // tombol 📂 MUAT
     export:       true,   // tombol ⬇ EXPORT JSON
@@ -286,8 +333,12 @@ function buildHeader() {
     title.innerHTML = 'SIMULATOR LANGSIR <span>KETAPANG</span> <small style="color:#5dade2;font-size:10px;font-weight:400"> v7</small>';
     hdr.appendChild(title);
 
-    // Statistik (selalu tampil)
+    // Statistik + undo/redo (selalu tampil)
     hdr.innerHTML += `
+        <div class="hdr-undo-wrap">
+            <button class="btn-undo" id="btnUndo" onclick="undo()" title="Undo (Ctrl+Z)" disabled>↩</button>
+            <button class="btn-undo" id="btnRedo" onclick="redo()" title="Redo (Ctrl+Y)" disabled>↪</button>
+        </div>
         <div class="hdr-stat"><div class="hdr-stat-val" id="moveCount">0</div><div class="hdr-stat-lbl">GERAKAN</div></div>
         <div class="hdr-stat"><div class="hdr-stat-val" id="selCount">0</div><div class="hdr-stat-lbl">DIPILIH</div></div>
     `;
@@ -357,7 +408,7 @@ const DEFAULT_TRACKS = {
                                                                        westX:455,  eastX:915  },
     "DIPO LOKO":      { x:550, y:110, w:190, cap:5,  units:["LOK CC206 01"],
                                                                        westX:550,  eastX:740  },
-    "DIPO KRT 1":     { x:140, y:30,  w:230, cap:6,  units:["KRT 1","KRT 2","KRT 3","KRT 4","KRT 5","KRT 6"],
+    "DIPO KRT 1":     { x:140, y:30,  w:230, cap:5,  units:["KRT 1","KRT 2","KRT 3","KRT 4","KRT 5"],
                                                                        westX:140,  eastX:370  },
     "DIPO KRT 2":     { x:140, y:70,  w:230, cap:7,  units:["KRT 01","KRT 02","KRT 06","KRT 04","KRT 05","KRT 06","KRT 07"],
                                                                        westX:140,  eastX:370  },
@@ -437,12 +488,80 @@ let layoutMode    = false;
 let snapGrid      = false;
 const GRID        = 5;
 
+// ── UNDO / REDO ──
+const HISTORY_MAX = 50;
+let undoStack = [];  // snapshot sebelum aksi
+let redoStack = [];  // snapshot untuk redo
+
+// ── WARNA SARANA ──
+// Map: "JALUR I::2" → "merah"  (track::idx → warna)
+// Disimpan terpisah dari units agar nama sarana tidak terkontaminasi
+let unitColors = {}; // key: `${track}::${unitName}` → warna
+
 let ctxTrack = null, ctxUnitIdx = null;
 let dragState = null, dragCurrentIdx = -1;
 let slotDrag  = null;
 let popupTrack = null, popupMode = null;
 
 function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+// ══════════════════════════════════════════
+//  UNDO / REDO
+// ══════════════════════════════════════════
+function snapshotForHistory() {
+    return { tracks: deepClone(trackConfigs), moveCount, colors: deepClone(unitColors) };
+}
+
+function pushHistory() {
+    undoStack.push(snapshotForHistory());
+    if (undoStack.length > HISTORY_MAX) undoStack.shift();
+    redoStack = []; // aksi baru hapus redo
+    updateUndoButtons();
+}
+
+function updateUndoButtons() {
+    const u = document.getElementById('btnUndo');
+    const r = document.getElementById('btnRedo');
+    if (!u || !r) return;
+    u.disabled = undoStack.length === 0;
+    r.disabled = redoStack.length === 0;
+    u.classList.toggle('can-act', undoStack.length > 0);
+    r.classList.toggle('can-act', redoStack.length > 0);
+}
+
+function undo() {
+    if (!undoStack.length) return;
+    redoStack.push(snapshotForHistory());
+    const snap = undoStack.pop();
+    trackConfigs = snap.tracks;
+    moveCount    = snap.moveCount;
+    unitColors   = snap.colors || {};
+    selectedUnits = []; fromTrack = null;
+    addLog(`↩ Undo — kembali ke gerakan ${moveCount}`, 'edit');
+    updateUndoButtons();
+    autoSave(); render();
+}
+
+function redo() {
+    if (!redoStack.length) return;
+    undoStack.push(snapshotForHistory());
+    const snap = redoStack.pop();
+    trackConfigs = snap.tracks;
+    moveCount    = snap.moveCount;
+    unitColors   = snap.colors || {};
+    selectedUnits = []; fromTrack = null;
+    addLog(`↪ Redo — maju ke gerakan ${moveCount}`, 'edit');
+    updateUndoButtons();
+    autoSave(); render();
+}
+
+// Keyboard shortcut Ctrl+Z / Ctrl+Y
+document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (e.ctrlKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); }
+    if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(); }
+});
 
 // ══════════════════════════════════════════
 //  HELPERS
@@ -550,6 +669,12 @@ function render() {
                 e.preventDefault();
                 showCtxMenu(e.clientX, e.clientY, name, i);
             });
+
+            // Terapkan warna jika ada
+            const colorKey = `${name}::${u}`;
+            const warna = unitColors[colorKey];
+            if (warna) chip.dataset.color = warna;
+
             row.appendChild(chip);
         });
         slot.appendChild(row);
@@ -700,6 +825,7 @@ function move(target) {
     }
     const src = trackConfigs[fromTrack].units;
     const dir = getRelativeDir(fromTrack, target);
+    pushHistory(); // simpan ke undo stack sebelum perubahan
     selectedUnits.map(u => src.indexOf(u)).sort((a,b)=>b-a).forEach(i => { if(i>=0) src.splice(i,1); });
     const locoSelIdx = selectedUnits.findIndex(u => u.toUpperCase().includes('LOK'));
     const leads = (dir==='from-west' && locoSelIdx===selectedUnits.length-1) || (dir==='from-east' && locoSelIdx===0);
@@ -719,7 +845,8 @@ function showCtxMenu(x, y, track, unitIdx) {
     ctxTrack = track; ctxUnitIdx = unitIdx;
     const m = document.getElementById('ctxMenu');
     m.style.display = 'block';
-    const mw = 175, mh = 185;
+    showColorSubMenu();
+    const mw = 190, mh = 230;
     m.style.left = (x + mw > window.innerWidth  ? x - mw : x) + 'px';
     m.style.top  = (y + mh > window.innerHeight ? y - mh : y) + 'px';
 }
@@ -736,7 +863,10 @@ function ctxSelectAll() {
 function ctxAddUnit()    { hideCtxMenu(); openAddPopup(ctxTrack, null); }
 function ctxDeleteUnit() {
     hideCtxMenu(); if (ctxUnitIdx === null) return;
+    pushHistory();
     const unit = trackConfigs[ctxTrack].units[ctxUnitIdx];
+    // hapus warna juga
+    delete unitColors[`${ctxTrack}::${unit}`];
     trackConfigs[ctxTrack].units.splice(ctxUnitIdx, 1);
     addLog(`HAPUS: [${unit}] dari jalur ${ctxTrack}`, 'edit');
     autoSave(); render();
@@ -744,12 +874,64 @@ function ctxDeleteUnit() {
 function ctxClearTrack() {
     hideCtxMenu();
     if (!ctxTrack || !confirm(`Kosongkan semua sarana di jalur [${ctxTrack}]?`)) return;
+    pushHistory();
+    // hapus semua warna di jalur ini
+    trackConfigs[ctxTrack].units.forEach(u => delete unitColors[`${ctxTrack}::${u}`]);
     trackConfigs[ctxTrack].units = [];
     addLog(`KOSONGKAN: ${ctxTrack}`, 'edit');
     autoSave(); render();
 }
 function ctxEditUnit()  { hideCtxMenu(); if (ctxUnitIdx !== null) openEditUnitPopup(ctxTrack, ctxUnitIdx); }
 function ctxEditTrack() { hideCtxMenu(); openEditTrackPopup(ctxTrack); }
+
+// ── TANDAI WARNA ──
+const WARNA_LIST = [
+    { id:'merah',  hex:'#dc3c3c', label:'Merah'  },
+    { id:'oranye', hex:'#dc6400', label:'Oranye' },
+    { id:'kuning', hex:'#d2aa00', label:'Kuning' },
+    { id:'hijau',  hex:'#228b22', label:'Hijau'  },
+    { id:'biru',   hex:'#1e64c8', label:'Biru'   },
+    { id:'ungu',   hex:'#8232b4', label:'Ungu'   },
+    { id:'pink',   hex:'#d25096', label:'Pink'   },
+    { id:'abu',    hex:'#646e78', label:'Abu'     },
+];
+
+function ctxWarnai(warnaId) {
+    if (ctxTrack === null || ctxUnitIdx === null) return;
+    const unitName = trackConfigs[ctxTrack].units[ctxUnitIdx];
+    const key = `${ctxTrack}::${unitName}`;
+    pushHistory();
+    if (unitColors[key] === warnaId) {
+        delete unitColors[key]; // toggle off jika warna sama
+        addLog(`🎨 Warna [${unitName}] dihapus`, 'edit');
+    } else {
+        unitColors[key] = warnaId;
+        addLog(`🎨 [${unitName}] → ${warnaId}`, 'edit');
+    }
+    autoSave(); render();
+}
+
+function ctxHapusWarna() {
+    if (ctxTrack === null || ctxUnitIdx === null) return;
+    const unitName = trackConfigs[ctxTrack].units[ctxUnitIdx];
+    delete unitColors[`${ctxTrack}::${unitName}`];
+    addLog(`🎨 Warna [${unitName}] dihapus`, 'edit');
+    autoSave(); render();
+}
+
+function showColorSubMenu() {
+    // Rebuild color row di context menu
+    const row = document.getElementById('ctxColorRow');
+    if (!row) return;
+    const unitName = ctxTrack && ctxUnitIdx !== null ? trackConfigs[ctxTrack].units[ctxUnitIdx] : null;
+    const currentColor = unitName ? unitColors[`${ctxTrack}::${unitName}`] : null;
+    row.innerHTML = WARNA_LIST.map(w =>
+        `<div class="ctx-color-swatch ${currentColor===w.id?'active':''}"
+              style="background:${w.hex}"
+              title="${w.label}"
+              onclick="ctxWarnai('${w.id}')"></div>`
+    ).join('') + `<button class="ctx-color-clear" onclick="ctxHapusWarna()">✕ Hapus</button>`;
+}
 
 // ══════════════════════════════════════════
 //  POPUP HELPERS
@@ -868,6 +1050,7 @@ function confirmAddUnit() {
             names.push(prefix + base + (jumlah > 1 && i > 0 ? ` (${i+1})` : ''));
         }
     }
+    pushHistory();
     if (pos === 'west') track.units.unshift(...names);
     else track.units.push(...names);
     addLog(`TAMBAH: ${jumlah} sarana ke ${popupTrack} [${pos==='west'?'UTARA':'SELATAN'}]: ${names.slice(0,3).join(', ')}${names.length>3?'...':''}`, 'edit');
@@ -958,7 +1141,7 @@ function getSnapshot() {
     for (const [k, v] of Object.entries(trackConfigs)) {
         snap[k] = { units:[...v.units], x:v.x, y:v.y, w:v.w };
     }
-    return { tracks:snap, moveCount, savedAt:new Date().toISOString() };
+    return { tracks:snap, moveCount, colors: deepClone(unitColors), savedAt:new Date().toISOString() };
 }
 
 function applySnapshot(snap) {
@@ -969,7 +1152,8 @@ function applySnapshot(snap) {
         if (v.y !== undefined)   trackConfigs[k].y = v.y;
         if (v.w !== undefined) { trackConfigs[k].w = v.w; trackConfigs[k].eastX = v.x + v.w; }
     }
-    moveCount = snap.moveCount || 0;
+    moveCount  = snap.moveCount || 0;
+    unitColors = snap.colors ? deepClone(snap.colors) : {};
 }
 
 function autoSave() {
@@ -1046,6 +1230,7 @@ function addLog(msg, type='info') {
 (function init() {
     // Bangun header dulu berdasarkan MENU_VISIBILITY
     buildHeader();
+    updateUndoButtons();
 
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
