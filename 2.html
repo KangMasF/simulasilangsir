@@ -131,15 +131,15 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 /* ── UNIT CHIP ── */
 .unit {
     font-family: var(--mono);
-    background: rgba(220,235,248,0.92); color: #0d1a2a;
+    background: none; color: #0d1a2a;
     padding: 1px 1px; font-size: 8px; font-weight: 700;
     cursor: pointer; border-radius: 2px;
-    border: 2px solid rgba(100, 130, 170, 0.7);
+    border: 2px solid #000000;
     white-space: nowrap; flex-shrink: 0; position: relative;
     transition: box-shadow .08s; display: flex; align-items: center; gap: 2px;
 }
 .unit:hover { box-shadow: 0 1px 5px rgba(0,0,0,.6); }
-.unit.loco { background: var(--loco); color: #fff; border: 1px solid #0f4a7a; }
+.unit.loco { background: var(--loco); color: #fff; border: 1px solid #000000; }
 .unit.loco .loco-arrow { font-size: 8px; }
 .unit.facing-east .loco-arrow::before { content: '▶'; }
 .unit.facing-west .loco-arrow::before { content: '◀'; }
