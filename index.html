@@ -66,7 +66,8 @@
     /* ┌─────────────────────────────────────────────────────┐
        │  🔲  TAMPILAN SLOT JALUR                            │
        └─────────────────────────────────────────────────────┘ */
-    --slot-bg:             transparent;  /* latar slot jalur di peta */
+    --slot-bg:             rgba(0,10,28,0.80);  /* latar slot jalur di peta */
+    --slot-blur:           blur(1px);            /* blur slot (ganti blur(0px) untuk hilangkan blur) */
     --slot-border-radius:  2px;                 /* sudut membulat slot */
     --chip-border-radius:  2px;                 /* sudut membulat chip sarana */
 
@@ -164,7 +165,7 @@ body { font-family: var(--font-sans); background: var(--warna-bg-halaman); color
     border: 0px solid rgba(100,160,220,0.35);
     border-radius: var(--slot-border-radius);
     padding: 0px;
-    z-index: 10; backdrop-filter: blur(1px);
+    z-index: 10; backdrop-filter: var(--slot-blur);
 }
 body.layout-mode .track-slot { border: 1px solid rgba(245,166,35,0.7) !important; cursor: grab; }
 body.layout-mode .track-slot:active { cursor: grabbing; }
@@ -355,11 +356,108 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 .paste-hint { font-size: 9px; color: #5a8ab0; margin-bottom: 5px; line-height: 1.5; }
 
 #importFile { display: none; }
+
+/* ── TOMBOL KUSTOM ── */
+.btn-kustom { background: #2a0a4a; color: #c084fc; }
+.btn-kustom.active { background: #7c3aed; color: #fff; }
+
+/* ── PANEL KUSTOMISASI VISUAL ── */
+#kustomPanel {
+    display: none;
+    background: #080f1c;
+    border: 1px solid #7c3aed;
+    border-top: 3px solid #c084fc;
+    border-radius: 0 0 6px 6px;
+    padding: 12px 16px 10px;
+    margin-bottom: 5px;
+    font-family: var(--font-sans);
+}
+#kustomPanel.open { display: block; }
+
+.kustom-title {
+    font-size: 11px; font-weight: 700; color: #c084fc;
+    letter-spacing: 1px; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.kustom-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px 20px;
+}
+.kustom-row {
+    display: flex; align-items: center; gap: 8px;
+}
+.kustom-row label {
+    font-size: 10px; color: #9ab0cc; flex: 1; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+}
+.kustom-row input[type=color] {
+    width: 32px; height: 22px; border: 1px solid #3a2a5a;
+    border-radius: 3px; cursor: pointer; padding: 1px 2px;
+    background: #0a0f1c; flex-shrink: 0;
+}
+.kustom-row input[type=range] {
+    width: 80px; accent-color: #7c3aed; flex-shrink: 0;
+}
+.kustom-row input[type=number] {
+    width: 56px; font-family: var(--font-mono); font-size: 10px;
+    background: #0a0f1c; color: #dce8f5;
+    border: 1px solid #3a2a5a; border-radius: 2px;
+    padding: 2px 4px; flex-shrink: 0;
+}
+.kustom-row select {
+    font-size: 10px; font-family: var(--font-sans);
+    background: #0a0f1c; color: #dce8f5;
+    border: 1px solid #3a2a5a; border-radius: 2px;
+    padding: 2px 4px; flex: 1;
+}
+.kustom-val {
+    font-size: 9px; color: #7a6a9a; min-width: 28px;
+    font-family: var(--font-mono); text-align: right; flex-shrink: 0;
+}
+.kustom-section {
+    font-size: 9px; font-weight: 700; color: #7c3aed;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    margin: 10px 0 6px; grid-column: 1/-1;
+    border-bottom: 1px solid #2a1a4a; padding-bottom: 3px;
+}
+.kustom-actions {
+    display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+}
+.kustom-btn {
+    font-family: var(--font-sans); font-size: 10px; font-weight: 700;
+    border: none; padding: 4px 12px; border-radius: 3px; cursor: pointer;
+    transition: opacity .15s;
+}
+.kustom-btn:hover { opacity: .82; }
+.kustom-btn-apply  { background: #7c3aed; color: #fff; }
+.kustom-btn-reset  { background: #2a1a3a; color: #9ab0cc; border: 1px solid #3a2a5a; }
+.kustom-btn-copy   { background: #1a3a1a; color: #4ade80; border: 1px solid #2a5a2a; }
+
 </style>
 </head>
 <body>
 
 <div class="header" id="mainHeader"><!-- dirender buildHeader() --></div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!--  🎨 PANEL KUSTOMISASI VISUAL                    -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="kustomPanel">
+    <div class="kustom-title">
+        🎨 KUSTOMISASI VISUAL — perubahan langsung terlihat
+        <span style="font-size:9px;color:#7a6a9a;font-weight:400">Setelah puas, sembunyikan panel ini dari MENU_VISIBILITY → kustomVisual: false</span>
+    </div>
+    <div class="kustom-grid" id="kustomGrid">
+        <!-- diisi oleh buildKustomPanel() -->
+    </div>
+    <div class="kustom-actions">
+        <button class="kustom-btn kustom-btn-apply" onclick="applyKustom()">✓ Terapkan</button>
+        <button class="kustom-btn kustom-btn-reset" onclick="resetKustom()">↺ Reset Default</button>
+        <button class="kustom-btn kustom-btn-copy"  onclick="copyKustomCode()">📋 Salin Kode CSS</button>
+        <span id="kustomCopyMsg" style="font-size:10px;color:#4ade80;display:none;align-self:center">✓ Tersalin!</span>
+    </div>
+</div>
 
 <div class="info-bar">
     <span id="statusBar">Drag unit untuk memilih | <span class="hint">SHIFT+KLIK</span> extend | <span class="hint">KLIK KANAN</span> opsi | <span class="hint">+</span> tambah</span>
@@ -402,6 +500,7 @@ const MENU_VISIBILITY = {
     export:       true,   // ⬇ EXPORT JSON
     import:       true,   // ⬆ IMPORT JSON
     reset:        true,   // ↺ RESET ke awal
+    kustomVisual: true,   // 🎨 KUSTOM VISUAL — panel kustomisasi tampilan
     showDividers: true,   // garis pemisah | antar kelompok
 };
 
@@ -571,6 +670,190 @@ function buildHeader() {
     btn('btn-export','','exportJSON()','⬇ EXPORT',MENU_VISIBILITY.export);
     if (MENU_VISIBILITY.import) hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-export" onclick="document.getElementById('importFile').click()">⬆ IMPORT</button><input type="file" id="importFile" accept=".json" onchange="importJSON(event)" style="display:none">`);
     btn('btn-reset','','confirmReset()','↺ RESET',MENU_VISIBILITY.reset);
+    if(MENU_VISIBILITY.kustomVisual){ if(MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>'); hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-kustom" id="btnKustom" onclick="toggleKustomPanel()">🎨 KUSTOM</button>`); }
+}
+
+// ══════════════════════════════════════════════════════════
+//  🎨 SISTEM KUSTOMISASI VISUAL
+// ══════════════════════════════════════════════════════════
+
+// Definisi semua variabel yang bisa dikustomisasi
+// Format: { id, label, type, var, default, min, max, unit, options }
+const KUSTOM_DEFS = [
+    // ── Warna Utama ──
+    { section: '🎨 Warna Utama' },
+    { id:'kc_header_bg',    label:'Latar Header',       type:'color', var:'--warna-header-bg',    def:'#002244' },
+    { id:'kc_aksen',        label:'Warna Aksen',         type:'color', var:'--warna-aksen',        def:'#f5a623' },
+    { id:'kc_teks',         label:'Warna Teks',          type:'color', var:'--warna-teks',         def:'#dce8f5' },
+    { id:'kc_border',       label:'Warna Border',        type:'color', var:'--warna-border',       def:'#1e3a5f' },
+    { id:'kc_sukses',       label:'Warna Sukses/Simpan', type:'color', var:'--warna-sukses',       def:'#27ae60' },
+    { id:'kc_bahaya',       label:'Warna Bahaya/Reset',  type:'color', var:'--warna-bahaya',       def:'#d0021b' },
+    // ── Latar Belakang ──
+    { section: '🌑 Latar Belakang' },
+    { id:'kc_bg_halaman',   label:'Halaman',             type:'color', var:'--warna-bg-halaman',   def:'#111820' },
+    { id:'kc_bg_popup',     label:'Popup',               type:'color', var:'--warna-bg-popup',     def:'#0d1e35' },
+    { id:'kc_bg_log',       label:'Kotak Log',           type:'color', var:'--warna-bg-log',       def:'#04080f' },
+    { id:'kc_bg_input',     label:'Input/Select',        type:'color', var:'--warna-bg-input',     def:'#07101c' },
+    { id:'kc_peta_bg',      label:'Background Peta',     type:'color', var:'--peta-bg',            def:'#ffffff' },
+    // ── Slot Jalur ──
+    { section: '🔲 Slot Jalur' },
+    { id:'kc_slot_opacity', label:'Transparansi Slot',   type:'range', var:'--slot-bg',
+      def: '0.80', min:0, max:1, step:0.05,
+      toCSS: v => { const c=document.getElementById('kc_slot_color')?.value||'#000a1c'; return hexToRgba(c, parseFloat(v)); },
+      fromCSS: css => { const m=css.match(/rgba?\([^)]+,\s*([\d.]+)\)/); return m?m[1]:'0.80'; } },
+    { id:'kc_slot_color',   label:'Warna Slot',          type:'color', var:'--slot-bg',
+      def:'#000a1c',
+      toCSS: v => { const op=document.getElementById('kc_slot_opacity')?.value||'0.80'; return hexToRgba(v, parseFloat(op)); },
+      fromCSS: css => { const m=css.match(/rgba?\(([\d]+),([\d]+),([\d]+)/); if(!m)return '#000a1c'; return rgbToHex(parseInt(m[1]),parseInt(m[2]),parseInt(m[3])); } },
+    { id:'kc_slot_blur',    label:'Blur Slot',           type:'range', var:'--slot-blur',
+      def:'1', min:0, max:10, step:1, unit:'px',
+      toCSS: v => v==='0'||v===0?'blur(0px)':`blur(${v}px)`,
+      fromCSS: css => { const m=css.match(/blur\(([\d.]+)px\)/); return m?m[1]:'1'; } },
+    // ── Chip Sarana ──
+    { section: '🚃 Chip Sarana' },
+    { id:'kc_chip_bg',      label:'Latar Chip',          type:'color', var:'--warna-chip-bg',      def:'#dce8f5' },
+    { id:'kc_chip_teks',    label:'Teks Chip',           type:'color', var:'--warna-chip-teks',    def:'#0d1a2a' },
+    { id:'kc_loko_bg',      label:'Latar Lokomotif',     type:'color', var:'--warna-loko-bg',      def:'#1a6fa8' },
+    { id:'kc_loko_teks',    label:'Teks Lokomotif',      type:'color', var:'--warna-loko-teks',    def:'#ffffff' },
+    { id:'kc_chip_pilih',   label:'Warna Terpilih',      type:'color', var:'--warna-chip-pilih',   def:'#e07b10' },
+    // ── Ukuran & Font ──
+    { section: '📏 Ukuran & Font' },
+    { id:'kc_ukuran_chip',  label:'Ukuran Teks Chip',    type:'range', var:'--ukuran-chip',
+      def:'8', min:6, max:14, step:1, unit:'px',
+      toCSS: v=>`${v}px`, fromCSS: css=>css.replace('px','') },
+    { id:'kc_ukuran_jalur', label:'Ukuran Nama Jalur',   type:'range', var:'--ukuran-nama-jalur',
+      def:'9', min:7, max:16, step:1, unit:'px',
+      toCSS: v=>`${v}px`, fromCSS: css=>css.replace('px','') },
+    { id:'kc_ukuran_judul', label:'Ukuran Judul Header', type:'range', var:'--ukuran-judul-header',
+      def:'15', min:10, max:24, step:1, unit:'px',
+      toCSS: v=>`${v}px`, fromCSS: css=>css.replace('px','') },
+    { id:'kc_font_judul',   label:'Font Judul',          type:'select', var:'--font-judul', def:"'Roboto Condensed', sans-serif",
+      options:["'Roboto Condensed', sans-serif","'Orbitron', sans-serif","'Oswald', sans-serif","'Barlow Condensed', sans-serif","Arial Narrow, Arial, sans-serif"] },
+];
+
+// Helper: hex ke rgba
+function hexToRgba(hex, alpha) {
+    const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+function rgbToHex(r,g,b) { return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+
+// Ambil nilai CSS variable saat ini dari dokumen
+function getCSSVar(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
+// Bangun grid kontrol
+function buildKustomPanel() {
+    const grid = document.getElementById('kustomGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    for (const def of KUSTOM_DEFS) {
+        if (def.section) {
+            const s = document.createElement('div');
+            s.className = 'kustom-section'; s.innerText = def.section;
+            grid.appendChild(s); continue;
+        }
+        const currentRaw = getCSSVar(def.var);
+        const row = document.createElement('div'); row.className = 'kustom-row';
+        if (def.type === 'color') {
+            const currentHex = def.fromCSS ? def.fromCSS(currentRaw) : (currentRaw||def.def);
+            row.innerHTML = `<label title="${def.var}">${def.label}</label>
+                <input type="color" id="${def.id}" value="${currentHex}" oninput="liveApplyKustom()">`;
+        } else if (def.type === 'range') {
+            const currentVal = def.fromCSS ? def.fromCSS(currentRaw) : (currentRaw||def.def);
+            const v = parseFloat(currentVal)||parseFloat(def.def);
+            row.innerHTML = `<label title="${def.var}">${def.label}</label>
+                <input type="range" id="${def.id}" min="${def.min}" max="${def.max}" step="${def.step||1}" value="${v}" oninput="liveApplyKustom();document.getElementById('${def.id}_val').innerText=this.value+(${JSON.stringify(def.unit||'')})" >
+                <span class="kustom-val" id="${def.id}_val">${v}${def.unit||''}</span>`;
+        } else if (def.type === 'select') {
+            const opts = def.options.map(o=>`<option value="${o}" ${(currentRaw||def.def)===o?'selected':''}>${o.split(',')[0].replace(/'/g,'')}</option>`).join('');
+            row.innerHTML = `<label title="${def.var}">${def.label}</label><select id="${def.id}" onchange="liveApplyKustom()">${opts}</select>`;
+        }
+        grid.appendChild(row);
+    }
+}
+
+// Terapkan semua nilai ke CSS variables secara live
+function liveApplyKustom() {
+    const root = document.documentElement;
+    for (const def of KUSTOM_DEFS) {
+        if (def.section) continue;
+        const el = document.getElementById(def.id);
+        if (!el) continue;
+        const rawVal = el.value;
+        const cssVal = def.toCSS ? def.toCSS(rawVal) : rawVal;
+        root.style.setProperty(def.var, cssVal);
+    }
+}
+
+function applyKustom() {
+    liveApplyKustom();
+    addLog('🎨 Kustomisasi visual diterapkan', 'edit');
+    // Simpan ke localStorage
+    const saved = {};
+    for (const def of KUSTOM_DEFS) {
+        if (def.section) continue;
+        const el = document.getElementById(def.id); if (!el) continue;
+        saved[def.id] = el.value;
+    }
+    try { localStorage.setItem('langsir_kustom_v8', JSON.stringify(saved)); } catch(_) {}
+}
+
+function resetKustom() {
+    if (!confirm('Reset semua tampilan ke default?')) return;
+    const root = document.documentElement;
+    for (const def of KUSTOM_DEFS) {
+        if (def.section) continue;
+        root.style.removeProperty(def.var);
+        const el = document.getElementById(def.id); if (!el) continue;
+        el.value = def.def;
+        const valEl = document.getElementById(def.id+'_val');
+        if (valEl) valEl.innerText = def.def + (def.unit||'');
+    }
+    try { localStorage.removeItem('langsir_kustom_v8'); } catch(_) {}
+    addLog('🎨 Tampilan direset ke default', 'edit');
+}
+
+function loadSavedKustom() {
+    try {
+        const raw = localStorage.getItem('langsir_kustom_v8');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        const root = document.documentElement;
+        for (const def of KUSTOM_DEFS) {
+            if (def.section || !saved[def.id]) continue;
+            const el = document.getElementById(def.id);
+            if (el) el.value = saved[def.id];
+            const cssVal = def.toCSS ? def.toCSS(saved[def.id]) : saved[def.id];
+            root.style.setProperty(def.var, cssVal);
+            const valEl = document.getElementById(def.id+'_val');
+            if (valEl) valEl.innerText = saved[def.id] + (def.unit||'');
+        }
+    } catch(_) {}
+}
+
+function copyKustomCode() {
+    const lines = [':root {'];
+    const root = document.documentElement;
+    for (const def of KUSTOM_DEFS) {
+        if (def.section) { lines.push(`\n    /* ${def.section} */`); continue; }
+        const val = root.style.getPropertyValue(def.var) || getCSSVar(def.var);
+        lines.push(`    ${def.var}: ${val};`);
+    }
+    lines.push('}');
+    navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+        const msg = document.getElementById('kustomCopyMsg');
+        msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2000);
+    });
+}
+
+function toggleKustomPanel() {
+    const panel = document.getElementById('kustomPanel');
+    const btn   = document.getElementById('btnKustom');
+    const isOpen = panel.classList.toggle('open');
+    if (btn) btn.classList.toggle('active', isOpen);
+    if (isOpen) { buildKustomPanel(); loadSavedKustom(); }
 }
 
 // ══ UNDO / REDO ══
