@@ -434,6 +434,45 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 .kustom-btn-reset  { background: #2a1a3a; color: #9ab0cc; border: 1px solid #3a2a5a; }
 .kustom-btn-copy   { background: #1a3a1a; color: #4ade80; border: 1px solid #2a5a2a; }
 
+
+/* ── LOG 3 KOLOM ── */
+.log-columns-wrap {
+    display: flex; gap: 6px; margin-top: 6px;
+}
+.log-col {
+    flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
+.log-col-header {
+    font-family: var(--font-sans); font-size: 10px; font-weight: 700;
+    color: var(--warna-aksen); background: #0a1e38;
+    border: 1px solid var(--warna-border); border-bottom: none;
+    padding: 3px 8px; border-radius: 2px 2px 0 0;
+    display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden;
+}
+.log-move-count {
+    background: #1a3a60; color: #5dade2; font-size: 9px;
+    padding: 1px 6px; border-radius: 8px; font-weight: 700;
+    flex-shrink: 0;
+}
+.log-wrap {
+    margin-top: 0 !important; border-radius: 0 0 2px 2px !important;
+    flex: 1;
+}
+.log-moves .log-entry {
+    cursor: default; user-select: text;
+}
+.log-moves .log-placeholder {
+    font-style: italic; color: #5a8ab0 !important;
+}
+.log-copy-btn {
+    font-family: var(--font-sans); font-size: 10px; font-weight: 700;
+    background: #0d3a5a; color: #5dade2;
+    border: 1px solid #1a5a8a; border-top: none;
+    padding: 4px 8px; cursor: pointer; border-radius: 0 0 2px 2px;
+    text-align: center; transition: background .12s;
+    margin-top: 0;
+}
+.log-copy-btn:hover { background: #1a4a7a; color: #fff; }
 </style>
 </head>
 <body>
@@ -468,7 +507,26 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 <div class="map-wrapper">
     <div class="emplasemen-container" id="map"></div>
 </div>
-<div class="log-wrap" id="log"></div>
+<div class="log-columns-wrap">
+    <div class="log-col">
+        <div class="log-col-header">&#x1F4CB; LOG AKTIVITAS</div>
+        <div class="log-wrap" id="log"></div>
+    </div>
+    <div class="log-col">
+        <div class="log-col-header">&#x1F682; GERAKAN LANGSIR &nbsp;<span class="log-move-count" id="moveCountMid">0 gerakan</span></div>
+        <div class="log-wrap log-moves" id="logMid">
+            <div class="log-entry log-info log-placeholder">Gerakan akan tercatat di sini...</div>
+        </div>
+        <button class="log-copy-btn" id="copyBtnMid" onclick="copyLogColumn('mid')">&#x1F4CB; Copy ke Excel</button>
+    </div>
+    <div class="log-col">
+        <div class="log-col-header">&#x1F683; TANPA 8E AGO &nbsp;<span class="log-move-count" id="moveCountRight">0 gerakan</span></div>
+        <div class="log-wrap log-moves" id="logRight">
+            <div class="log-entry log-info log-placeholder">Gerakan (tanpa 8E AGO) akan tercatat di sini...</div>
+        </div>
+        <button class="log-copy-btn" id="copyBtnRight" onclick="copyLogColumn('right')">&#x1F4CB; Copy ke Excel</button>
+    </div>
+</div>
 
 <div class="ctx-menu" id="ctxMenu" style="display:none">
     <div class="ctx-item" onclick="ctxSelectAll()">☑ Pilih Semua Rangkaian</div>
@@ -1016,6 +1074,7 @@ function move(target) {
     if(dir==='from-west') dst.unshift(...selectedUnits); else dst.push(...selectedUnits);
     moveCount++;
     addLog(`GRK ${moveCount}: [${leads?'MENARIK':'MENDORONG'}] ${selectedUnits.length} unit  ${fromTrack} → ${target}  | Wesel: ${getSwitch(fromTrack,target)}`,'ok');
+    logMove(fromTrack, target);
     selectedUnits=[]; fromTrack=null; autoSave(); render();
 }
 
@@ -1146,6 +1205,7 @@ function createPopup(titleHTML, width) {
 // ══ POPUP: TAMBAH SARANA ══
 function openAddPopup(track) {
     popupTrack = track; popupMode = 'add';
+    addActiveTab = 'manual';
     const p = createPopup(`➕ TAMBAH SARANA — ${track}`, '310px');
     document.getElementById('popOverlay').innerHTML = '';
     document.getElementById('popOverlay').appendChild(p);
@@ -1323,10 +1383,76 @@ function saveTemplate() { autoSave(); addLog('💾 Tersimpan','info'); const b=d
 function loadTemplate() { const raw=localStorage.getItem(STORAGE_KEY); if(!raw){addLog('Tidak ada template tersimpan.','err');return;} try{const snap=JSON.parse(raw);applySnapshot(snap);selectedUnits=[];fromTrack=null;addLog(`📂 Dimuat (${new Date(snap.savedAt).toLocaleString('id-ID')})`,'info');render();}catch(e){addLog('Gagal memuat template.','err');} }
 function exportJSON() { const blob=new Blob([JSON.stringify(getSnapshot(),null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob),a=document.createElement('a'); a.href=url; a.download=`langsir_ktg_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); addLog('⬇ Export JSON selesai','info'); }
 function importJSON(e) { const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{applySnapshot(JSON.parse(ev.target.result));selectedUnits=[];fromTrack=null;addLog(`⬆ Import: ${file.name}`,'info');render();}catch(_){addLog('Gagal import.','err');}};r.readAsText(file);e.target.value=''; }
-function confirmReset() { if(!confirm('Reset ke kondisi awal?'))return;trackConfigs=deepClone(DEFAULT_TRACKS);selectedUnits=[];fromTrack=null;moveCount=0;unitColors={};addLog('↺ Reset ke kondisi awal.','info');autoSave();render(); }
+function confirmReset() { if(!confirm('Reset ke kondisi awal?'))return;trackConfigs=deepClone(DEFAULT_TRACKS);selectedUnits=[];fromTrack=null;moveCount=0;unitColors={};resetMoveLogs();addLog('↺ Reset ke kondisi awal.','info');autoSave();render(); }
 
 // ══ LOG ══
 function addLog(msg,type='info') { const log=document.getElementById('log'),el=document.createElement('div');el.className=`log-entry log-${type}`;const n=new Date(),ts=`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`;el.innerText=`[${ts}] ${msg}`;log.appendChild(el);log.scrollTop=log.scrollHeight; }
+
+// == LOG GERAKAN KOLOM TENGAH & KANAN ==
+let moveMidLines = [];
+let moveRightLines = [];
+
+function logMove(from, to) {
+    const midEl = document.getElementById('logMid');
+    if (!midEl) return;
+    const placeholder = midEl.querySelector('.log-placeholder');
+    if (placeholder) placeholder.remove();
+    const midLine = from + ' \u2192 ' + to;
+    moveMidLines.push(midLine);
+    const midEntry = document.createElement('div');
+    midEntry.className = 'log-entry log-ok';
+    midEntry.style.cssText = 'user-select:text;cursor:text;';
+    midEntry.innerText = midLine;
+    midEl.appendChild(midEntry);
+    midEl.scrollTop = midEl.scrollHeight;
+    const mc = document.getElementById('moveCountMid');
+    if (mc) mc.innerText = moveMidLines.length + ' gerakan';
+    const AGO = '8E AGO';
+    if (from !== AGO && to !== AGO) {
+        const rightEl = document.getElementById('logRight');
+        if (!rightEl) return;
+        const placeholderR = rightEl.querySelector('.log-placeholder');
+        if (placeholderR) placeholderR.remove();
+        const rightLine = from + ' \u2192 ' + to;
+        moveRightLines.push(rightLine);
+        const rightEntry = document.createElement('div');
+        rightEntry.className = 'log-entry log-ok';
+        rightEntry.style.cssText = 'user-select:text;cursor:text;';
+        rightEntry.innerText = rightLine;
+        rightEl.appendChild(rightEntry);
+        rightEl.scrollTop = rightEl.scrollHeight;
+        const rc = document.getElementById('moveCountRight');
+        if (rc) rc.innerText = moveRightLines.length + ' gerakan';
+    }
+}
+
+function copyLogColumn(col) {
+    const lines = col === 'mid' ? moveMidLines : moveRightLines;
+    if (!lines.length) { alert('Belum ada gerakan yang tercatat.'); return; }
+    const text = lines.join('\n');
+    const fallback = function() {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta); alert('Tersalin! Paste di Excel.');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            const btnId = col === 'mid' ? 'copyBtnMid' : 'copyBtnRight';
+            const btn = document.getElementById(btnId);
+            if (btn) { const orig = btn.innerText; btn.innerText = '\u2705 Tersalin!'; setTimeout(function(){btn.innerText=orig;}, 1800); }
+        }).catch(fallback);
+    } else { fallback(); }
+}
+
+function resetMoveLogs() {
+    moveMidLines = []; moveRightLines = [];
+    const midEl = document.getElementById('logMid'), rightEl = document.getElementById('logRight');
+    if (midEl) midEl.innerHTML = '<div class="log-entry log-info log-placeholder" style="font-style:italic">Gerakan akan tercatat di sini...</div>';
+    if (rightEl) rightEl.innerHTML = '<div class="log-entry log-info log-placeholder" style="font-style:italic">Gerakan (tanpa 8E AGO) akan tercatat di sini...</div>';
+    const mc = document.getElementById('moveCountMid'), rc = document.getElementById('moveCountRight');
+    if (mc) mc.innerText = '0 gerakan'; if (rc) rc.innerText = '0 gerakan';
+}
 
 // ══ INIT ══
 (function init() {
