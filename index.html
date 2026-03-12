@@ -116,6 +116,10 @@ body { font-family: var(--font-sans); background: var(--warna-bg-halaman); color
 .btn-load   { background: #17568a; color: #fff; }
 .btn-export { background: #444; color: #fff; }
 .btn-reset  { background: var(--warna-bahaya); color: #fff; }
+.btn-reset-count { background: #4a2800; color: #f5a623; border: 1px solid #8a4800; }
+.btn-reset-count:hover { background: #6a3800 !important; }
+.btn-ctx-toggle { background: #1a3a5a; color: #5dade2; }
+.btn-ctx-toggle.ctx-off { background: #2a1a1a; color: #e74c3c; text-decoration: line-through; }
 
 /* ── UNDO / REDO ── */
 .hdr-undo-wrap { display: flex; gap: 3px; align-items: center; }
@@ -742,6 +746,9 @@ function buildHeader() {
     btn('btn-export','','exportJSON()','⬇ EXPORT',MENU_VISIBILITY.export);
     if (MENU_VISIBILITY.import) hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-export" onclick="document.getElementById('importFile').click()">⬆ IMPORT</button><input type="file" id="importFile" accept=".json" onchange="importJSON(event)" style="display:none">`);
     btn('btn-reset','','confirmReset()','↺ RESET',MENU_VISIBILITY.reset);
+    if (MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>');
+    hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-reset-count" id="btnResetCount" onclick="confirmResetCount()" title="Reset hitungan gerakan saja (posisi kereta tidak berubah)">↺ RESET HITUNGAN</button>`);
+    hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-ctx-toggle" id="btnCtxToggle" onclick="toggleCtxEnabled()" title="Aktifkan/nonaktifkan menu klik kanan">☰ MENU KLIK</button>`);
     if(MENU_VISIBILITY.kustomVisual){ if(MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>'); hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-kustom" id="btnKustom" onclick="toggleKustomPanel()">🎨 KUSTOM</button>`); }
 }
 
@@ -1138,7 +1145,7 @@ function move(target) {
 }
 
 // ══ CONTEXT MENU ══
-function showCtxMenu(x,y,track,unitIdx) { ctxTrack=track; ctxUnitIdx=unitIdx; const m=document.getElementById('ctxMenu'); m.style.display='block'; showColorSubMenu(); const mw=190,mh=260; m.style.left=(x+mw>window.innerWidth?x-mw:x)+'px'; m.style.top=(y+mh>window.innerHeight?y-mh:y)+'px'; }
+function showCtxMenu(x,y,track,unitIdx) { if(!ctxEnabled) return; ctxTrack=track; ctxUnitIdx=unitIdx; const m=document.getElementById('ctxMenu'); m.style.display='block'; showColorSubMenu(); const mw=190,mh=260; m.style.left=(x+mw>window.innerWidth?x-mw:x)+'px'; m.style.top=(y+mh>window.innerHeight?y-mh:y)+'px'; }
 function hideCtxMenu() { document.getElementById('ctxMenu').style.display='none'; }
 document.addEventListener('click',hideCtxMenu);
 function ctxSelectAll() { hideCtxMenu(); if(!ctxTrack) return; fromTrack=ctxTrack; selectedUnits=[...trackConfigs[ctxTrack].units]; addLog(`☑ Semua ${selectedUnits.length} unit di [${ctxTrack}] dipilih`,'info'); render(); }
@@ -1443,6 +1450,32 @@ function loadTemplate() { const raw=localStorage.getItem(STORAGE_KEY); if(!raw){
 function exportJSON() { const blob=new Blob([JSON.stringify(getSnapshot(),null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob),a=document.createElement('a'); a.href=url; a.download=`langsir_ktg_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); addLog('⬇ Export JSON selesai','info'); }
 function importJSON(e) { const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{applySnapshot(JSON.parse(ev.target.result));selectedUnits=[];fromTrack=null;addLog(`⬆ Import: ${file.name}`,'info');render();}catch(_){addLog('Gagal import.','err');}};r.readAsText(file);e.target.value=''; }
 function confirmReset() { if(!confirm('Reset ke kondisi awal?'))return;trackConfigs=deepClone(DEFAULT_TRACKS);selectedUnits=[];fromTrack=null;moveCount=0;unitColors={};resetMoveLogs();addLog('↺ Reset ke kondisi awal.','info');autoSave();render(); }
+
+// ── RESET HITUNGAN SAJA ──
+function confirmResetCount() {
+    if(!confirm('Reset hitungan gerakan dan log kolom?\nPosisi kereta tidak akan berubah.')) return;
+    moveCount = 0;
+    undoStack = []; redoStack = [];
+    resetMoveLogs();
+    updateUndoButtons();
+    document.getElementById('moveCount').innerText = '0';
+    addLog('↺ Hitungan gerakan direset.','info');
+    autoSave();
+}
+
+// ── TOGGLE MENU KLIK KANAN ──
+let ctxEnabled = true;
+function toggleCtxEnabled() {
+    ctxEnabled = !ctxEnabled;
+    hideCtxMenu();
+    const btn = document.getElementById('btnCtxToggle');
+    if (btn) {
+        btn.classList.toggle('ctx-off', !ctxEnabled);
+        btn.innerText = ctxEnabled ? '☰ MENU KLIK' : '✕ MENU KLIK';
+        btn.title = ctxEnabled ? 'Nonaktifkan menu klik kanan' : 'Aktifkan menu klik kanan';
+    }
+    addLog(ctxEnabled ? '☰ Menu klik kanan AKTIF' : '✕ Menu klik kanan NONAKTIF', 'info');
+}
 
 // ══ LOG ══
 function addLog(msg,type='info') { const log=document.getElementById('log'),el=document.createElement('div');el.className=`log-entry log-${type}`;const n=new Date(),ts=`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`;el.innerText=`[${ts}] ${msg}`;log.appendChild(el);log.scrollTop=log.scrollHeight; }
