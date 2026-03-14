@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -1673,6 +1674,44 @@ function _updateKetCount() {
     if (mc) mc.innerText = filled + ' gerakan';
 }
 
+// Buat 1 baris input kosong di bagian bawah (tanpa label)
+function _ensureBlankRow() {
+    var ketEl = document.getElementById('logKet');
+    if (!ketEl) return;
+    // Jika baris terakhir sudah punya label → tambah baris kosong baru
+    var last = ketLines.length > 0 ? ketLines[ketLines.length - 1] : null;
+    if (!last || last.label !== '') {
+        var idx = ketLines.length;
+        ketLines.push({ label: '', text: '' });
+        var row = _makeKetRow(idx);
+        ketEl.appendChild(row);
+        ketEl.scrollTop = ketEl.scrollHeight;
+        _saveKet();
+    }
+}
+
+// Buat elemen DOM untuk satu baris ket
+function _makeKetRow(idx) {
+    var item = ketLines[idx];
+    var row = document.createElement('div');
+    row.className = 'log-ket-row'; row.dataset.idx = idx;
+    var lbl = document.createElement('span');
+    lbl.className = 'log-ket-label';
+    lbl.innerText = item.label || '';
+    lbl.dataset.labelFor = idx;
+    var inp = document.createElement('input');
+    inp.type = 'text'; inp.className = 'log-ket-input';
+    inp.placeholder = 'AMBIL / LEPAS ...';
+    inp.dataset.idx = idx; inp.value = item.text || '';
+    inp.addEventListener('input', function() {
+        ketLines[parseInt(this.dataset.idx)].text = this.value;
+        _updateKetCount();
+        _saveKet();
+    });
+    row.appendChild(lbl); row.appendChild(inp);
+    return row;
+}
+
 function _appendKet(toJalur) {
     var AGO = '8E AGO';
     if (toJalur === AGO) return;
@@ -1681,25 +1720,34 @@ function _appendKet(toJalur) {
     var ph = ketEl.querySelector('.log-placeholder');
     if (ph) ph.remove();
     var label = (JALUR_LABEL[toJalur] || toJalur) + ':';
-    var idx = ketLines.length;
-    ketLines.push({ label: label, text: '' });
-    var row = document.createElement('div');
-    row.className = 'log-ket-row'; row.dataset.idx = idx;
-    var lbl = document.createElement('span');
-    lbl.className = 'log-ket-label'; lbl.innerText = label;
-    var inp = document.createElement('input');
-    inp.type = 'text'; inp.className = 'log-ket-input';
-    inp.placeholder = 'AMBIL / LEPAS ...';
-    inp.dataset.idx = idx;
-    inp.addEventListener('input', function() {
-        ketLines[parseInt(this.dataset.idx)].text = this.value;
-        _updateKetCount();
-        _saveKet();
-    });
-    row.appendChild(lbl); row.appendChild(inp);
-    ketEl.appendChild(row);
-    ketEl.scrollTop = ketEl.scrollHeight;
+
+    // Cari baris tanpa label dari atas (yang belum dapat label dari simulasi)
+    var targetIdx = -1;
+    for (var i = 0; i < ketLines.length; i++) {
+        if (ketLines[i].label === '') { targetIdx = i; break; }
+    }
+
+    if (targetIdx !== -1) {
+        // Inject label ke baris kosong yang sudah ada
+        ketLines[targetIdx].label = label;
+        // Update DOM label span
+        var rows = ketEl.querySelectorAll('.log-ket-row');
+        if (rows[targetIdx]) {
+            var lbl = rows[targetIdx].querySelector('.log-ket-label');
+            if (lbl) lbl.innerText = label;
+        }
+    } else {
+        // Tidak ada baris kosong → buat baris baru dengan label
+        var idx = ketLines.length;
+        ketLines.push({ label: label, text: '' });
+        var row = _makeKetRow(idx);
+        ketEl.appendChild(row);
+        ketEl.scrollTop = ketEl.scrollHeight;
+    }
+
     _updateKetCount();
+    _ensureBlankRow(); // pastikan selalu ada 1 baris kosong di bawah
+    _saveKet();
 }
 
 function _saveKet() {
@@ -1714,6 +1762,7 @@ function _loadKet() {
         if (!Array.isArray(saved) || saved.length === 0) return;
         ketLines = saved;
         _rebuildKetDOM();
+        _ensureBlankRow();
     } catch(_) {}
 }
 
@@ -1722,40 +1771,25 @@ function _rebuildKetDOM() {
     if (!ketEl) return;
     ketEl.innerHTML = '';
     if (ketLines.length === 0) {
-        ketEl.innerHTML = '<div class="log-entry log-info log-placeholder" style="font-style:italic">Keterangan akan muncul di sini...</div>';
-        var mc = document.getElementById('moveCountKet');
-        if (mc) mc.innerText = '0 gerakan';
-        return;
+        // Mulai dengan 1 baris kosong siap isi
+        ketLines.push({ label: '', text: '' });
     }
     ketLines.forEach(function(item, idx) {
-        var row = document.createElement('div');
-        row.className = 'log-ket-row'; row.dataset.idx = idx;
-        var lbl = document.createElement('span');
-        lbl.className = 'log-ket-label'; lbl.innerText = item.label;
-        var inp = document.createElement('input');
-        inp.type = 'text'; inp.className = 'log-ket-input';
-        inp.placeholder = 'AMBIL / LEPAS ...';
-        inp.dataset.idx = idx; inp.value = item.text || '';
-        inp.addEventListener('input', function() {
-            ketLines[parseInt(this.dataset.idx)].text = this.value;
-            _updateKetCount();
-            _saveKet();
-        });
-        row.appendChild(lbl); row.appendChild(inp);
-        ketEl.appendChild(row);
+        ketEl.appendChild(_makeKetRow(idx));
     });
     ketEl.scrollTop = ketEl.scrollHeight;
     _updateKetCount();
 }
 
 function resetKetLog() {
-    ketLines = [];
+    ketLines = [{ label: '', text: '' }]; // reset ke 1 baris kosong
     _rebuildKetDOM();
     try { localStorage.removeItem(KET_STORAGE_KEY); } catch(_) {}
 }
 
 function copyLogKet() {
-    if (!ketLines.length) { alert('Belum ada keterangan yang tercatat.'); return; }
+    var filled = ketLines.filter(function(k){ return k.label && k.text && k.text.trim() !== ''; });
+    if (!filled.length) { alert('Belum ada keterangan yang diisi.'); return; }
 
     var DIPO_CUCI = ['D1:', 'D2:', 'C1:', 'C2:'];
     var TRANSIT   = ['J.I:', 'J.II:'];
@@ -1763,28 +1797,31 @@ function copyLogKet() {
     function isTR(l)  { return TRANSIT.indexOf(l) !== -1; }
     function isEmpty(k) { return !k.text || k.text.trim() === ''; }
 
+    // Hanya proses baris yang sudah punya label (skip baris pre-fill tanpa label)
+    var labeled = ketLines.filter(function(k){ return k.label !== ''; });
+
     // Tandai baris J.I/J.II kosong yang diapit DIPO/CUCI → skip
     var skipIdx = {};
-    for (var i = 0; i < ketLines.length; i++) {
-        var k = ketLines[i];
+    for (var i = 0; i < labeled.length; i++) {
+        var k = labeled[i];
         if (!isTR(k.label) || !isEmpty(k)) continue;
         var prevLabel = null;
         for (var p = i-1; p >= 0; p--) {
-            if (isTR(ketLines[p].label) && isEmpty(ketLines[p])) continue;
-            prevLabel = ketLines[p].label; break;
+            if (isTR(labeled[p].label) && isEmpty(labeled[p])) continue;
+            prevLabel = labeled[p].label; break;
         }
         var nextLabel = null;
-        for (var n = i+1; n < ketLines.length; n++) {
-            if (isTR(ketLines[n].label) && isEmpty(ketLines[n])) continue;
-            nextLabel = ketLines[n].label; break;
+        for (var n = i+1; n < labeled.length; n++) {
+            if (isTR(labeled[n].label) && isEmpty(labeled[n])) continue;
+            nextLabel = labeled[n].label; break;
         }
         if (isDC(prevLabel) && isDC(nextLabel)) skipIdx[i] = true;
     }
 
     var outputLines = [];
-    for (var j = 0; j < ketLines.length; j++) {
+    for (var j = 0; j < labeled.length; j++) {
         if (skipIdx[j]) continue;
-        var line = ketLines[j];
+        var line = labeled[j];
         if (isEmpty(line)) {
             outputLines.push(''); // baris kosong → sel kosong di Excel
         } else {
