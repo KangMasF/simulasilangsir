@@ -1834,9 +1834,13 @@ function logMove(from, to) {
 
     // BUFFER 1: via 8E AGO
     if (to === AGO) {
-        // Masuk 8E AGO → simpan asal, reset dipo buffer
+        // Jika ada _dipoBuffer menggantung, flush dulu sebelum masuk AGO
+        if (_dipoBuffer !== null) {
+            _appendRight(_dipoBuffer + ' → ' + from);
+            _dipoBuffer = null;
+        }
+        // Masuk 8E AGO → simpan asal
         _agoBuffer = from;
-        _dipoBuffer = null;
         return;
     }
     if (from === AGO && _agoBuffer !== null) {
