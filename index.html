@@ -1207,12 +1207,32 @@ function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoAtFr
             // Ada yang tertinggal di FROM, atau FROM kosong → kereta yg dibawa dari TO
             label = targetTrackName;
         }
-        var count = nonLokoMoved.length;
+        // Jika label=TO → kereta yang diambil = yang ada di target sebelumnya
+        // Jika label=FROM → semua non-loko yang ikut pindah dari from
+        var count = (label === targetTrackName && nonLokoAtTargetBefore > 0)
+            ? nonLokoAtTargetBefore
+            : nonLokoMoved.length;
         var lokoIdx = movedUnits.findIndex(function(u){ return isLoco(u); });
         var nonLokoInOrder = movedUnits.filter(function(u){ return !isLoco(u); });
-        var ujungJauh = lokoIdx === 0
-            ? nonLokoInOrder[nonLokoInOrder.length - 1]
-            : nonLokoInOrder[0];
+        // Ujung terjauh dari loko di antara kereta yang BARU diambil
+        // Kereta yang baru diambil ada di sisi berlawanan dengan loko
+        var ujungJauh;
+        if (label === targetTrackName && nonLokoAtTargetBefore > 0) {
+            // Kereta dari target ada di ujung berlawanan loko
+            // Ambil kereta paling jauh di antara yang baru diambil (= ujung paling luar)
+            if (lokoIdx === 0) {
+                // Loko di kiri → kereta dari target di kanan → yang terjauh = index terakhir
+                ujungJauh = nonLokoInOrder[nonLokoInOrder.length - 1];
+            } else {
+                // Loko di kanan → kereta dari target di kiri → yang terjauh = index pertama
+                ujungJauh = nonLokoInOrder[0];
+            }
+        } else {
+            // AMBIL dari FROM — ujung terjauh dari seluruh rangkaian
+            ujungJauh = lokoIdx === 0
+                ? nonLokoInOrder[nonLokoInOrder.length - 1]
+                : nonLokoInOrder[0];
+        }
         var tj = _unitType(ujungJauh), nj = ujungJauh.replace(tj + ' ', '').trim();
         var pakai_sp = count > 1;
         var text = (!pakai_sp ? 'AMBIL 1 KRT ' : 'AMBIL ' + count + ' KRT SP ') + tj + ' ' + nj;
