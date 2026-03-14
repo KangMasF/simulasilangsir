@@ -120,6 +120,8 @@ body { font-family: var(--font-sans); background: var(--warna-bg-halaman); color
 .btn-reset-count:hover { background: #6a3800 !important; }
 .btn-ctx-toggle { background: #1a3a5a; color: #5dade2; }
 .btn-ctx-toggle.ctx-off { background: #2a1a1a; color: #e74c3c; text-decoration: line-through; }
+.btn-lepas-drag { background: #1a3a2a; color: #2ecc71; }
+.btn-lepas-drag:hover { background: #2ecc71; color: #0a1a0a; }
 
 /* ── UNDO / REDO ── */
 .hdr-undo-wrap { display: flex; gap: 3px; align-items: center; }
@@ -788,6 +790,7 @@ function buildHeader() {
     if (MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>');
     hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-reset-count" id="btnResetCount" onclick="confirmResetCount()" title="Reset hitungan gerakan saja (posisi kereta tidak berubah)">↺ RESET HITUNGAN</button>`);
     hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-ctx-toggle" id="btnCtxToggle" onclick="toggleCtxEnabled()" title="Aktifkan/nonaktifkan menu klik kanan">☰ MENU KLIK</button>`);
+    hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-lepas-drag" id="btnLepasDrag" onclick="lepasDrag()" title="Batalkan seleksi kereta yang sedang dipilih">🔓 LEPAS</button>`);
     if(MENU_VISIBILITY.kustomVisual){ if(MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>'); hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-kustom" id="btnKustom" onclick="toggleKustomPanel()">🎨 KUSTOM</button>`); }
 }
 
@@ -1169,7 +1172,20 @@ function onUnitTouchEnd(e) {
 function _mapTouchStart(e) {
     if (layoutMode) return;
     if (!e.target.closest('.unit') && !e.target.closest('.btn-move') && !e.target.closest('.btn-add-unit')) {
-        if (selectedUnits.length > 0) { selectedUnits = []; fromTrack = null; render(); }
+        if (selectedUnits.length > 0) {
+            // Catat posisi awal — batalkan seleksi hanya jika jari tidak bergerak (bukan scroll)
+            var _startX = e.touches[0].clientX;
+            var _startY = e.touches[0].clientY;
+            var _moved = false;
+            var _onMove = function(ev) { if (Math.abs(ev.touches[0].clientX - _startX) > 8 || Math.abs(ev.touches[0].clientY - _startY) > 8) _moved = true; };
+            var _onEnd = function() {
+                document.removeEventListener('touchmove', _onMove);
+                document.removeEventListener('touchend', _onEnd);
+                if (!_moved) { selectedUnits = []; fromTrack = null; render(); }
+            };
+            document.addEventListener('touchmove', _onMove, {passive: true});
+            document.addEventListener('touchend', _onEnd, {passive: true});
+        }
     }
 }
 
@@ -1600,6 +1616,14 @@ function confirmResetCount() {
     document.getElementById('moveCount').innerText = '0';
     addLog('↺ Hitungan gerakan dinolkan.','info');
     autoSave();
+}
+
+// ── LEPAS DRAG ──
+function lepasDrag() {
+    if (selectedUnits.length > 0) {
+        selectedUnits = []; fromTrack = null; render();
+        addLog('🔓 Seleksi dilepas.', 'info');
+    }
 }
 
 // ── TOGGLE MENU KLIK KANAN ──
