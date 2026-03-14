@@ -184,6 +184,7 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 .slot-header { display: flex; align-items: center; gap: 0px; flex-wrap: nowrap; margin-bottom: 0px; }
 /* ✏️ Ganti --ukuran-nama-jalur dan warna #90caff untuk nama jalur */
 .slot-name { font-family: var(--font-sans); font-size: var(--ukuran-nama-jalur); font-weight: 700; color: var(--warna-nama-jalur); white-space: nowrap; letter-spacing: .2px; flex-shrink: 0; }
+.slot-count-badge { font-family: var(--font-mono); font-size: 8px; font-weight: 700; color: rgba(140,200,255,0.75); white-space: nowrap; flex-shrink: 0; margin-left: 4px; letter-spacing: .3px; }
 .move-btns-inline { display: flex; gap: 2px; flex-wrap: nowrap; flex: 1; }
 /* ✏️ Ganti warna tombol → SINI: ubah background & color di sini */
 .btn-move {
@@ -1032,6 +1033,18 @@ function render() {
         const handle=document.createElement('div'); handle.className='slot-drag-handle'; handle.innerHTML='⠿'; handle.title='Drag untuk pindah posisi'; handle.addEventListener('mousedown',onSlotDragStart); slot.appendChild(handle);
         const hdr=document.createElement('div'); hdr.className='slot-header';
         const nameEl=document.createElement('span'); nameEl.className='slot-name'; nameEl.innerText=name; hdr.appendChild(nameEl);
+        // Badge jumlah KRT dan LOK
+        const krtCount = data.units.filter(u=>!isLoco(u)).length;
+        const lokCount  = data.units.filter(u=>isLoco(u)).length;
+        if (data.units.length > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'slot-count-badge';
+            const parts = [];
+            if (krtCount > 0) parts.push(krtCount + ' KRT');
+            if (lokCount  > 0) parts.push(lokCount  + ' LOK');
+            badge.innerText = parts.length ? '[' + parts.join(' | ') + ']' : '';
+            hdr.appendChild(badge);
+        }
         if (selectedUnits.length>0&&fromTrack&&fromTrack!==name&&isConnected(fromTrack,name)) {
             const mw=document.createElement('div'); mw.className='move-btns-inline';
             const btn1=document.createElement('button'); btn1.className='btn-move'; btn1.innerText='→ MASUK JALUR'; btn1.onclick=()=>move(name); mw.appendChild(btn1);
@@ -1157,19 +1170,28 @@ function _mapTouchStart(e) {
 // LEPAS: moved hanya loko → kereta tertinggal di FROM, label = FROM
 // LEPAS SEMUA: count > 1 yang tertinggal
 
-function _unitType(uname) {
-    for (var i = 0; i < SARANA_TYPES.length; i++) {
-        var t = SARANA_TYPES[i];
+// Helper: hitung non-loko yang saat ini bersama loko (di jalur yang sama dengan loko)
+function _nonLokoWithLoko() {
+    var names = Object.keys(trackConfigs);
+    for (var i = 0; i < names.length; i++) {
+        var units = trackConfigs[names[i]].units;
+        if (units.some(function(u){ return isLoco(u); })) {
+            return units.filter(function(u){ return !isLoco(u); }).length;
+        }
+    }
+    return 0;
+}
+
         if (t.prefix && uname.startsWith(t.prefix)) return t.code;
     }
     return uname.split(' ')[0];
 }
 
-function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoAtFromBefore, nonLokoAtTargetBefore) {
+function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoAtFromBefore, nonLokoAtTargetBefore, withLokoBefore) {
+    withLokoBefore = withLokoBefore || 0;
     var nonLokoMoved = movedUnits.filter(function(u){ return !isLoco(u); });
     var lokoOnly = nonLokoMoved.length === 0;
 
-    // Sisa non-loko di FROM setelah gerakan (untuk LEPAS)
     var srcUnitsNow = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
     var srcNonLokoNow = srcUnitsNow.filter(function(u){ return !isLoco(u); });
     var srcNonLokoCount = srcNonLokoNow.length;
@@ -1190,49 +1212,32 @@ function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoAtFr
 
     } else {
         // ── AMBIL: loko bawa non-loko ──
-        // Label = jalur tempat kereta berada SEBELUM gerakan:
-        //   jika nonLokoAtFromBefore > 0 → kereta ada di FROM → label=FROM
-        //   jika nonLokoAtTargetBefore > 0 → kereta ada di TO  → label=TO
-        //   jika keduanya 0 → fallback TO
-        // Label = jalur tempat kereta yang DIPINDAH berasal:
-        // Jika ada non-loko tertinggal di FROM → kereta yg dibawa berasal dari TO → label=TO
-        // Jika FROM kosong sebelumnya (fromBefore=0) → kereta diambil dari TO → label=TO
-        // Jika FROM punya non-loko dan SEMUANYA dibawa (srcNonLokoCount=0) → kereta dari FROM → label=FROM
-        var srcAfterCount = srcNonLokoCount; // sisa di FROM setelah gerakan
+        var srcAfterCount = srcNonLokoCount;
         var label;
         if (nonLokoAtFromBefore > 0 && srcAfterCount === 0) {
-            // Semua non-loko dari FROM ikut → AMBIL dari FROM
             label = fromTrackName;
         } else {
-            // Ada yang tertinggal di FROM, atau FROM kosong → kereta yg dibawa dari TO
             label = targetTrackName;
         }
-        // Jika label=TO → kereta yang diambil = yang ada di target sebelumnya
-        // Jika label=FROM → semua non-loko yang ikut pindah dari from
-        var count = (label === targetTrackName && nonLokoAtTargetBefore > 0)
-            ? nonLokoAtTargetBefore
-            : nonLokoMoved.length;
+
+        // count = hanya kereta yang BARU diambil pada gerakan ini
+        var count;
+        if (label === targetTrackName && nonLokoAtTargetBefore > 0) {
+            // Loko datang ke TO ambil kereta yang ada di sana
+            count = nonLokoAtTargetBefore;
+        } else if (withLokoBefore > 0) {
+            // Loko sudah bawa kereta, ambil tambahan dari FROM
+            var baru = nonLokoMoved.length - withLokoBefore;
+            count = baru > 0 ? baru : nonLokoMoved.length;
+        } else {
+            count = nonLokoMoved.length;
+        }
+
         var lokoIdx = movedUnits.findIndex(function(u){ return isLoco(u); });
         var nonLokoInOrder = movedUnits.filter(function(u){ return !isLoco(u); });
-        // Ujung terjauh dari loko di antara kereta yang BARU diambil
-        // Kereta yang baru diambil ada di sisi berlawanan dengan loko
-        var ujungJauh;
-        if (label === targetTrackName && nonLokoAtTargetBefore > 0) {
-            // Kereta dari target ada di ujung berlawanan loko
-            // Ambil kereta paling jauh di antara yang baru diambil (= ujung paling luar)
-            if (lokoIdx === 0) {
-                // Loko di kiri → kereta dari target di kanan → yang terjauh = index terakhir
-                ujungJauh = nonLokoInOrder[nonLokoInOrder.length - 1];
-            } else {
-                // Loko di kanan → kereta dari target di kiri → yang terjauh = index pertama
-                ujungJauh = nonLokoInOrder[0];
-            }
-        } else {
-            // AMBIL dari FROM — ujung terjauh dari seluruh rangkaian
-            ujungJauh = lokoIdx === 0
-                ? nonLokoInOrder[nonLokoInOrder.length - 1]
-                : nonLokoInOrder[0];
-        }
+        var ujungJauh = lokoIdx === 0
+            ? nonLokoInOrder[nonLokoInOrder.length - 1]
+            : nonLokoInOrder[0];
         var tj = _unitType(ujungJauh), nj = ujungJauh.replace(tj + ' ', '').trim();
         var pakai_sp = count > 1;
         var text = (!pakai_sp ? 'AMBIL 1 KRT ' : 'AMBIL ' + count + ' KRT SP ') + tj + ' ' + nj;
@@ -1253,6 +1258,7 @@ function move(target) {
     const _fromSnap  = fromTrack;
     const _nonLokoAtFromBefore   = src.filter(u=>!isLoco(u)).length;
     const _nonLokoAtTargetBefore = trackConfigs[target].units.filter(u=>!isLoco(u)).length;
+    const _withLokoBefore        = _nonLokoWithLoko(); // kereta terangkai loko sebelum gerakan
     pushHistory();
     selectedUnits.map(u=>src.indexOf(u)).sort((a,b)=>b-a).forEach(i=>{if(i>=0)src.splice(i,1);});
     const li=selectedUnits.findIndex(u=>isLoco(u));
@@ -1264,7 +1270,7 @@ function move(target) {
     // Hanya hitung keterangan saat berangkat dari jalur nyata (bukan dari 8E AGO)
     // Karena AMBIL/LEPAS terjadi saat loko berangkat dari jalur, bukan dari buffer AGO
     if (_fromSnap !== '8E AGO') {
-        var _ketResult = _buildKetResult(_movedSnap, _fromSnap, target, _nonLokoAtFromBefore, _nonLokoAtTargetBefore);
+        var _ketResult = _buildKetResult(_movedSnap, _fromSnap, target, _nonLokoAtFromBefore, _nonLokoAtTargetBefore, _withLokoBefore);
         _pendingKetText = _ketResult ? _ketResult.text : null;
     }
     // Jika from=8E AGO, biarkan _pendingKetText dari gerakan sebelumnya (X→AGO) tetap berlaku
