@@ -1884,10 +1884,6 @@ function _appendRight(line) {
     el.innerText = line; rightEl.appendChild(el); rightEl.scrollTop = rightEl.scrollHeight;
     var rc = document.getElementById('moveCountRight');
     if (rc) rc.innerText = moveRightLines.length + ' gerakan';
-    // Kolom TOTAL GERAKAN: label otomatis dari jalur asal (FROM)
-    var parts = line.split(' → ');
-    var fromJalur = parts.length >= 2 ? parts[0].trim() : '';
-    if (fromJalur) _appendKet(fromJalur);
 }
 
 function logMove(from, to) {
