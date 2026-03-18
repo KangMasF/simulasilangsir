@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -1193,13 +1192,17 @@ function _mapTouchStart(e) {
 
 // ══ MOVE ══
 // ── AUTO KET: bangun teks AMBIL/LEPAS otomatis ──
-// AMBIL: moved mengandung non-loko
-//   label = FROM jika kereta ada di FROM sebelum gerakan (loko+kereta bersama pindah)
-//   label = TO   jika kereta ada di TO sebelum gerakan (loko kosong pergi ambil)
-// LEPAS: moved hanya loko → kereta tertinggal di FROM, label = FROM
-// LEPAS SEMUA: count > 1 yang tertinggal
+// Label selalu = TO (jalur tujuan loko)
+// AMBIL: loko tiba di TO membawa non-loko → non-loko di TO bertambah
+//   X = jumlah non-loko yang ikut pindah (dibawa loko)
+//   SP = chip paling jauh dari loko dalam rombongan yang dibawa
+// LEPAS: loko tiba di TO tanpa non-loko, meninggalkan kereta di FROM
+//   X = jumlah non-loko tertinggal di FROM
+//   SP = chip paling dekat dari loko di antara yang tertinggal di FROM
+// LEPAS SEMUA: jika semua non-loko di FROM tertinggal dan loko pergi kosong
+// Loko kosong (tidak bawa/tinggal kereta) → null (skip, ikut buffer)
 
-// Helper: hitung non-loko yang saat ini bersama loko (di jalur yang sama dengan loko)
+// Helper: hitung non-loko yang saat ini bersama loko
 function _nonLokoWithLoko() {
     var names = Object.keys(trackConfigs);
     for (var i = 0; i < names.length; i++) {
@@ -1211,69 +1214,87 @@ function _nonLokoWithLoko() {
     return 0;
 }
 
-function _unitType(uname) {
-    for (var i = 0; i < SARANA_TYPES.length; i++) {
-        var t = SARANA_TYPES[i];
-        if (t.prefix && uname.startsWith(t.prefix)) return t.code;
-    }
-    return uname.split(' ')[0];
-}
-
-function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoAtFromBefore, nonLokoAtTargetBefore, withLokoBefore) {
-    withLokoBefore = withLokoBefore || 0;
+function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoAtFromBefore) {
     var nonLokoMoved = movedUnits.filter(function(u){ return !isLoco(u); });
     var lokoOnly = nonLokoMoved.length === 0;
 
+    // State setelah gerakan
     var srcUnitsNow = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
     var srcNonLokoNow = srcUnitsNow.filter(function(u){ return !isLoco(u); });
-    var srcNonLokoCount = srcNonLokoNow.length;
 
     if (lokoOnly) {
-        // ── LEPAS: loko pergi sendiri, kereta tertinggal di FROM ──
-        if (srcNonLokoCount === 0) return null;
-        var label = fromTrackName;
+        // Loko pergi sendiri ke TO → LEPAS di TO
+        // X = non-loko yang tertinggal di FROM (sudah tidak ada loko)
+        var leftBehind = srcNonLokoNow.length;
+        if (leftBehind === 0) return null; // loko kosong bolak-balik, skip
+
         var text;
-        if (srcNonLokoCount > 1) {
-            text = 'LEPAS SEMUA';
+        if (leftBehind === nonLokoAtFromBefore) {
+            // Semua non-loko tertinggal
+            if (leftBehind === 1) {
+                var satu = srcNonLokoNow[0];
+                text = 'LEPAS 1 KRT ' + satu;
+            } else {
+                text = 'LEPAS SEMUA';
+            }
         } else {
-            var ujung = srcNonLokoNow[srcNonLokoNow.length - 1];
-            var td = _unitType(ujung), nd = ujung.replace(td + ' ', '').trim();
-            text = 'LEPAS 1 KRT ' + td + ' ' + nd;
+            // Sebagian tertinggal
+            // Cari posisi loko dalam movedUnits untuk tahu arah
+            // Loko kosong → tidak ada non-loko di movedUnits, pakai posisi loko di FROM sebelumnya
+            // Kita tahu loko ada di movedUnits (satu-satunya unit)
+            var lokoPos = 0; // loko di movedUnits[0]
+            // Dari FROM sebelumnya, loko ada di ujung mana?
+            // Kita gunakan array FROM sekarang (tanpa loko) + tahu loko sudah pergi
+            // Arah: cek apakah loko tadinya di kiri atau kanan array FROM
+            // Karena sudah dipindah, cari dari snapshot movedUnits
+            // lokoOnly = true → movedUnits = [LOKO]
+            // Kita tidak tahu posisi loko di FROM sebelumnya dari sini
+            // Gunakan pendekatan: loko biasanya di ujung, cek dari targetTrack
+            var dstUnitsNow = trackConfigs[targetTrackName] ? trackConfigs[targetTrackName].units : [];
+            var lokoIdxDst = dstUnitsNow.findIndex(function(u){ return isLoco(u); });
+            // Jika loko di ujung kanan dst → datang dari kiri → di FROM tadinya di kiri
+            // Yang terdekat dari loko di FROM = ujung kiri FROM sekarang = indeks 0
+            var terdekat;
+            if (lokoIdxDst === dstUnitsNow.length - 1) {
+                // loko di kanan dst → FROM: loko tadinya di kiri → terdekat = indeks 0
+                terdekat = srcNonLokoNow[0];
+            } else {
+                // loko di kiri dst → FROM: loko tadinya di kanan → terdekat = indeks terakhir
+                terdekat = srcNonLokoNow[srcNonLokoNow.length - 1];
+            }
+            if (leftBehind === 1) {
+                text = 'LEPAS 1 KRT ' + terdekat;
+            } else {
+                text = 'LEPAS ' + leftBehind + ' KRT SP ' + terdekat;
+            }
         }
-        return { label: label, text: text };
+        return { label: targetTrackName, text: text };
 
     } else {
-        // ── AMBIL: loko bawa non-loko ──
-        var srcAfterCount = srcNonLokoCount;
-        var label;
-        if (nonLokoAtFromBefore > 0 && srcAfterCount === 0) {
-            label = fromTrackName;
-        } else {
-            label = targetTrackName;
-        }
+        // Loko bawa non-loko ke TO → AMBIL di TO
+        var count = nonLokoMoved.length;
+        if (count === 0) return null;
 
-        // count = hanya kereta yang BARU diambil pada gerakan ini
-        var count;
-        if (label === targetTrackName && nonLokoAtTargetBefore > 0) {
-            // Loko datang ke TO ambil kereta yang ada di sana
-            count = nonLokoAtTargetBefore;
-        } else if (withLokoBefore > 0) {
-            // Loko sudah bawa kereta, ambil tambahan dari FROM
-            var baru = nonLokoMoved.length - withLokoBefore;
-            count = baru > 0 ? baru : nonLokoMoved.length;
-        } else {
-            count = nonLokoMoved.length;
-        }
-
+        // Cari posisi loko dalam movedUnits
         var lokoIdx = movedUnits.findIndex(function(u){ return isLoco(u); });
         var nonLokoInOrder = movedUnits.filter(function(u){ return !isLoco(u); });
-        var ujungJauh = lokoIdx === 0
-            ? nonLokoInOrder[nonLokoInOrder.length - 1]
-            : nonLokoInOrder[0];
-        var tj = _unitType(ujungJauh), nj = ujungJauh.replace(tj + ' ', '').trim();
-        var pakai_sp = count > 1;
-        var text = (!pakai_sp ? 'AMBIL 1 KRT ' : 'AMBIL ' + count + ' KRT SP ') + tj + ' ' + nj;
-        return { label: label, text: text };
+
+        // Loko di ujung kanan movedUnits (lokoIdx = last) → kereta terjauh = indeks 0
+        // Loko di ujung kiri movedUnits (lokoIdx = 0) → kereta terjauh = indeks last
+        var ujungJauh;
+        if (lokoIdx === movedUnits.length - 1) {
+            ujungJauh = nonLokoInOrder[0];
+        } else {
+            ujungJauh = nonLokoInOrder[nonLokoInOrder.length - 1];
+        }
+
+        var text;
+        if (count === 1) {
+            text = 'AMBIL 1 KRT ' + ujungJauh;
+        } else {
+            text = 'AMBIL ' + count + ' KRT SP ' + ujungJauh;
+        }
+        return { label: targetTrackName, text: text };
     }
 }
 function move(target) {
@@ -1288,9 +1309,7 @@ function move(target) {
     // Snapshot sebelum dipindah untuk auto-ket
     const _movedSnap = [...selectedUnits];
     const _fromSnap  = fromTrack;
-    const _nonLokoAtFromBefore   = src.filter(u=>!isLoco(u)).length;
-    const _nonLokoAtTargetBefore = trackConfigs[target].units.filter(u=>!isLoco(u)).length;
-    const _withLokoBefore        = _nonLokoWithLoko(); // kereta terangkai loko sebelum gerakan
+    const _nonLokoAtFromBefore = src.filter(u=>!isLoco(u)).length;
     pushHistory();
     selectedUnits.map(u=>src.indexOf(u)).sort((a,b)=>b-a).forEach(i=>{if(i>=0)src.splice(i,1);});
     const li=selectedUnits.findIndex(u=>isLoco(u));
@@ -1298,7 +1317,12 @@ function move(target) {
     if(dir==='from-west') dst.unshift(...selectedUnits); else dst.push(...selectedUnits);
     moveCount++;
     addLog(`GRK ${moveCount}: [${leads?'MENARIK':'MENDORONG'}] ${selectedUnits.length} unit  ${fromTrack} → ${target}  | Wesel: ${getSwitch(fromTrack,target)}`,'ok');
-    logMove(fromTrack, target);
+    logMove(_fromSnap, target);
+    // Auto-ket: hitung AMBIL/LEPAS setelah state diupdate
+    var _ketResult = _buildKetResult(_movedSnap, _fromSnap, target, _nonLokoAtFromBefore);
+    if (_ketResult) {
+        _injectKetLabel(_ketResult.label, _ketResult.text);
+    }
     selectedUnits=[]; fromTrack=null; autoSave(); render();
 }
 
@@ -1712,7 +1736,54 @@ function _makeKetRow(idx) {
     return row;
 }
 
-function _appendKet(toJalur) {
+// Inject label + teks otomatis ke baris kosong pertama, atau buat baris baru
+function _injectKetLabel(jalurName, autoText) {
+    var AGO = '8E AGO';
+    if (jalurName === AGO) return;
+    var label = (JALUR_LABEL[jalurName] || jalurName) + ':';
+    var ketEl = document.getElementById('logKet');
+    if (!ketEl) return;
+    var ph = ketEl.querySelector('.log-placeholder');
+    if (ph) ph.remove();
+
+    // Cari baris tanpa label dari atas
+    var targetIdx = -1;
+    for (var i = 0; i < ketLines.length; i++) {
+        if (ketLines[i].label === '') { targetIdx = i; break; }
+    }
+
+    if (targetIdx !== -1) {
+        // Inject label ke baris kosong yang sudah ada
+        // Jika baris sudah ada isian manual → pertahankan, hanya tambah label
+        // Jika baris kosong total → isi juga teks otomatis
+        ketLines[targetIdx].label = label;
+        if (!ketLines[targetIdx].text || ketLines[targetIdx].text.trim() === '') {
+            ketLines[targetIdx].text = autoText;
+        }
+        // Update DOM
+        var rows = ketEl.querySelectorAll('.log-ket-row');
+        if (rows[targetIdx]) {
+            var lbl = rows[targetIdx].querySelector('.log-ket-label');
+            if (lbl) lbl.innerText = label;
+            var inp = rows[targetIdx].querySelector('.log-ket-input');
+            if (inp && (!inp.value || inp.value.trim() === '')) inp.value = autoText;
+        }
+    } else {
+        // Tidak ada baris kosong → buat baris baru dengan label + teks otomatis
+        var idx = ketLines.length;
+        ketLines.push({ label: label, text: autoText });
+        var row = _makeKetRow(idx);
+        // Set nilai input otomatis
+        var inp2 = row.querySelector('.log-ket-input');
+        if (inp2) inp2.value = autoText;
+        ketEl.appendChild(row);
+        ketEl.scrollTop = ketEl.scrollHeight;
+    }
+
+    _updateKetCount();
+    _ensureBlankRow();
+    _saveKet();
+}
     var AGO = '8E AGO';
     if (toJalur === AGO) return;
     var ketEl = document.getElementById('logKet');
