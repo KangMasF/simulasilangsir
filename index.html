@@ -1718,34 +1718,32 @@ function _injectKetLabel(jalurName, autoText) {
     var ph = ketEl.querySelector('.log-placeholder');
     if (ph) ph.remove();
 
-    // Cari baris tanpa label dari atas
+    // Cari baris yang label kosong DAN teks kosong (baris pre-fill murni kosong)
+    // Baris yang sudah ada teks manual (tapi belum ada label) → SKIP, jangan ditimpa
     var targetIdx = -1;
     for (var i = 0; i < ketLines.length; i++) {
-        if (ketLines[i].label === '') { targetIdx = i; break; }
+        var k = ketLines[i];
+        if (k.label === '' && (!k.text || k.text.trim() === '')) {
+            targetIdx = i; break;
+        }
     }
 
     if (targetIdx !== -1) {
-        // Inject label ke baris kosong yang sudah ada
-        // Jika baris sudah ada isian manual → pertahankan, hanya tambah label
-        // Jika baris kosong total → isi juga teks otomatis
+        // Inject label + teks otomatis ke baris kosong murni
         ketLines[targetIdx].label = label;
-        if (!ketLines[targetIdx].text || ketLines[targetIdx].text.trim() === '') {
-            ketLines[targetIdx].text = autoText;
-        }
-        // Update DOM
+        ketLines[targetIdx].text  = autoText;
         var rows = ketEl.querySelectorAll('.log-ket-row');
         if (rows[targetIdx]) {
             var lbl = rows[targetIdx].querySelector('.log-ket-label');
             if (lbl) lbl.innerText = label;
             var inp = rows[targetIdx].querySelector('.log-ket-input');
-            if (inp && (!inp.value || inp.value.trim() === '')) inp.value = autoText;
+            if (inp) inp.value = autoText;
         }
     } else {
-        // Tidak ada baris kosong → buat baris baru dengan label + teks otomatis
+        // Tidak ada baris kosong murni → buat baris baru
         var idx = ketLines.length;
         ketLines.push({ label: label, text: autoText });
         var row = _makeKetRow(idx);
-        // Set nilai input otomatis
         var inp2 = row.querySelector('.log-ket-input');
         if (inp2) inp2.value = autoText;
         ketEl.appendChild(row);
