@@ -1784,42 +1784,6 @@ function _injectKetLabel(jalurName, autoText) {
     _ensureBlankRow();
     _saveKet();
 }
-    var AGO = '8E AGO';
-    if (toJalur === AGO) return;
-    var ketEl = document.getElementById('logKet');
-    if (!ketEl) return;
-    var ph = ketEl.querySelector('.log-placeholder');
-    if (ph) ph.remove();
-    var label = (JALUR_LABEL[toJalur] || toJalur) + ':';
-
-    // Cari baris tanpa label dari atas (yang belum dapat label dari simulasi)
-    var targetIdx = -1;
-    for (var i = 0; i < ketLines.length; i++) {
-        if (ketLines[i].label === '') { targetIdx = i; break; }
-    }
-
-    if (targetIdx !== -1) {
-        // Inject label ke baris kosong yang sudah ada
-        ketLines[targetIdx].label = label;
-        // Update DOM label span
-        var rows = ketEl.querySelectorAll('.log-ket-row');
-        if (rows[targetIdx]) {
-            var lbl = rows[targetIdx].querySelector('.log-ket-label');
-            if (lbl) lbl.innerText = label;
-        }
-    } else {
-        // Tidak ada baris kosong → buat baris baru dengan label
-        var idx = ketLines.length;
-        ketLines.push({ label: label, text: '' });
-        var row = _makeKetRow(idx);
-        ketEl.appendChild(row);
-        ketEl.scrollTop = ketEl.scrollHeight;
-    }
-
-    _updateKetCount();
-    _ensureBlankRow(); // pastikan selalu ada 1 baris kosong di bawah
-    _saveKet();
-}
 
 function _saveKet() {
     try { localStorage.setItem(KET_STORAGE_KEY, JSON.stringify(ketLines)); } catch(_) {}
