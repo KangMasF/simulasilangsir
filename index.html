@@ -758,6 +758,7 @@ let dragState = null, dragCurrentIdx = -1;
 let slotDrag = null;
 let popupTrack = null, popupMode = null;
 let addDirManual = 'US', addDirPaste = 'US', addActiveTab = 'manual', pasteMode = 'append';
+let keretaPernahDibawa = {}; // melacak kereta yang pernah dibawa loko
 
 function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 
@@ -1017,7 +1018,7 @@ function toggleKustomPanel() {
 }
 
 // ══ UNDO / REDO ══
-function snapshotForHistory() { return { tracks:deepClone(trackConfigs), moveCount, colors:deepClone(unitColors), midLines:[...moveMidLines], rightLines:[...moveRightLines], agoBuffer:_agoBuffer, dipoBuffer:_dipoBuffer, ketLines:deepClone(ketLines) }; }
+function snapshotForHistory() { return { tracks:deepClone(trackConfigs), moveCount, colors:deepClone(unitColors), midLines:[...moveMidLines], rightLines:[...moveRightLines], agoBuffer:_agoBuffer, dipoBuffer:_dipoBuffer, ketLines:deepClone(ketLines), pernah:deepClone(keretaPernahDibawa) }; }
 function pushHistory() { undoStack.push(snapshotForHistory()); if (undoStack.length>HISTORY_MAX) undoStack.shift(); redoStack=[]; updateUndoButtons(); }
 function updateUndoButtons() {
     const u=document.getElementById('btnUndo'), r=document.getElementById('btnRedo');
@@ -1025,8 +1026,8 @@ function updateUndoButtons() {
     u.disabled=undoStack.length===0; r.disabled=redoStack.length===0;
     u.classList.toggle('can-act',undoStack.length>0); r.classList.toggle('can-act',redoStack.length>0);
 }
-function undo() { if(!undoStack.length) return; redoStack.push(snapshotForHistory()); const s=undoStack.pop(); trackConfigs=s.tracks; moveCount=s.moveCount; unitColors=s.colors||{}; if(s.midLines!==undefined){moveMidLines=s.midLines;moveRightLines=s.rightLines;_agoBuffer=s.agoBuffer||null;_dipoBuffer=s.dipoBuffer||null;if(s.ketLines!==undefined){ketLines=s.ketLines;_rebuildKetDOM();_saveKet();}rebuildMoveLogs();} selectedUnits=[]; fromTrack=null; addLog(`↩ Undo — gerakan ${moveCount}`,'edit'); updateUndoButtons(); autoSave(); render(); }
-function redo() { if(!redoStack.length) return; undoStack.push(snapshotForHistory()); const s=redoStack.pop(); trackConfigs=s.tracks; moveCount=s.moveCount; unitColors=s.colors||{}; if(s.midLines!==undefined){moveMidLines=s.midLines;moveRightLines=s.rightLines;_agoBuffer=s.agoBuffer||null;_dipoBuffer=s.dipoBuffer||null;if(s.ketLines!==undefined){ketLines=s.ketLines;_rebuildKetDOM();_saveKet();}rebuildMoveLogs();} selectedUnits=[]; fromTrack=null; addLog(`↪ Redo — gerakan ${moveCount}`,'edit'); updateUndoButtons(); autoSave(); render(); }
+function undo() { if(!undoStack.length) return; redoStack.push(snapshotForHistory()); const s=undoStack.pop(); trackConfigs=s.tracks; moveCount=s.moveCount; unitColors=s.colors||{}; if(s.midLines!==undefined){moveMidLines=s.midLines;moveRightLines=s.rightLines;_agoBuffer=s.agoBuffer||null;_dipoBuffer=s.dipoBuffer||null;if(s.ketLines!==undefined){ketLines=s.ketLines;_rebuildKetDOM();_saveKet();}if(s.pernah!==undefined)keretaPernahDibawa=s.pernah;rebuildMoveLogs();} selectedUnits=[]; fromTrack=null; addLog(`↩ Undo — gerakan ${moveCount}`,'edit'); updateUndoButtons(); autoSave(); render(); }
+function redo() { if(!redoStack.length) return; undoStack.push(snapshotForHistory()); const s=redoStack.pop(); trackConfigs=s.tracks; moveCount=s.moveCount; unitColors=s.colors||{}; if(s.midLines!==undefined){moveMidLines=s.midLines;moveRightLines=s.rightLines;_agoBuffer=s.agoBuffer||null;_dipoBuffer=s.dipoBuffer||null;if(s.ketLines!==undefined){ketLines=s.ketLines;_rebuildKetDOM();_saveKet();}if(s.pernah!==undefined)keretaPernahDibawa=s.pernah;rebuildMoveLogs();} selectedUnits=[]; fromTrack=null; addLog(`↪ Redo — gerakan ${moveCount}`,'edit'); updateUndoButtons(); autoSave(); render(); }
 document.addEventListener('keydown',(e)=>{ const t=document.activeElement.tagName; if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT') return; if(e.ctrlKey&&!e.shiftKey&&e.key==='z'){e.preventDefault();undo();} if(e.ctrlKey&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redo();} });
 
 // ══ HELPERS ══
@@ -1213,65 +1214,54 @@ function _nonLokoWithLoko() {
 }
 
 function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoWithLokoBefore) {
-    var before = nonLokoWithLokoBefore;
+    if (fromTrackName === '8E AGO' || targetTrackName === '8E AGO') return null;
 
-    // after = non-loko yang sekarang bersama loko di TO
-    var dstUnitsNow = trackConfigs[targetTrackName] ? trackConfigs[targetTrackName].units : [];
-    var after = dstUnitsNow.filter(function(u){ return !isLoco(u); }).length;
+    var nonLokoMoved = movedUnits.filter(function(u){ return !isLoco(u); });
+    var lokoIdx      = movedUnits.findIndex(function(u){ return isLoco(u); });
+    var lokoAtRight  = (lokoIdx === movedUnits.length - 1);
 
-    // skip jika tidak ada perubahan atau loko kosong bolak-balik
-    if (before === after) return null;
+    // Sisa non-loko di FROM setelah gerakan
+    var srcUnitsNow = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
+    var srcNonLoko  = srcUnitsNow.filter(function(u){ return !isLoco(u); });
+
+    // LEPAS = kereta yang tertinggal di FROM dan pernah dibawa loko
+    var lepas = srcNonLoko.filter(function(u){ return keretaPernahDibawa[u] === true; });
+
+    // AMBIL = non-loko yang baru pertama kali ikut loko (belum pernah dibawa)
+    var ambil = nonLokoMoved.filter(function(u){ return !keretaPernahDibawa[u]; });
+
+    if (lepas.length === 0 && ambil.length === 0) return null;
 
     var label = fromTrackName;
     var text;
-    var nonLokoMoved = movedUnits.filter(function(u){ return !isLoco(u); });
-    var lokoIdx = movedUnits.findIndex(function(u){ return isLoco(u); });
-    // Loko di kanan (lokoIdx = last) → ujung jauh = kiri (index 0)
-    // Loko di kiri  (lokoIdx = 0)   → ujung jauh = kanan (index last)
-    var lokoAtRight = (lokoIdx === movedUnits.length - 1);
 
-    if (after > before) {
-        // AMBIL — loko membawa lebih banyak setelah berangkat
-        var jumlah = after - before;
-        // Kereta yang baru diambil = jumlah kereta dari ujung JAUH loko dalam movedUnits
-        // lokoAtRight → ujung jauh = kiri (index 0) → terjauh = nonLokoMoved[0]
-        // lokoAtLeft  → ujung jauh = kanan (index last) → terjauh = nonLokoMoved[last]
-        var terjauh = lokoAtRight
-            ? nonLokoMoved[0]
-            : nonLokoMoved[nonLokoMoved.length - 1];
-        if (jumlah === 1) {
-            text = 'AMBIL 1 KRT ' + (terjauh || '');
+    if (ambil.length > 0 && lepas.length === 0) {
+        // AMBIL: terjauh dari loko dalam rombongan yang diambil
+        var terjauh = lokoAtRight ? ambil[0] : ambil[ambil.length - 1];
+        if (ambil.length === 1) {
+            text = 'AMBIL 1 KRT ' + terjauh;
         } else {
-            text = 'AMBIL ' + jumlah + ' KRT SP ' + (terjauh || '');
+            text = 'AMBIL ' + ambil.length + ' KRT SP ' + terjauh;
+        }
+
+    } else if (lepas.length > 0 && ambil.length === 0) {
+        // LEPAS: terdekat dari loko di antara yang tertinggal
+        var terdekat = lokoAtRight ? lepas[lepas.length - 1] : lepas[0];
+        if (lepas.length === srcNonLoko.length && lepas.length > 1) {
+            text = 'LEPAS SEMUA';
+        } else if (lepas.length === 1) {
+            text = 'LEPAS 1 KRT ' + terdekat;
+        } else {
+            text = 'LEPAS ' + lepas.length + ' KRT SP ' + terdekat;
         }
 
     } else {
-        // LEPAS — loko membawa lebih sedikit setelah berangkat
-        var jumlah = before - after;
-        if (after === 0) {
-            // Loko melepas semua
-            if (before === 1) {
-                var srcAll = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
-                var satu = srcAll.filter(function(u){ return !isLoco(u); })[0];
-                text = 'LEPAS 1 KRT ' + (satu || '');
-            } else {
-                text = 'LEPAS SEMUA';
-            }
-        } else {
-            // Lepas sebagian — yang tertinggal di FROM adalah yang terdekat ke loko
-            var srcNow = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
-            var srcNonLoko = srcNow.filter(function(u){ return !isLoco(u); });
-            // Loko tadinya di kanan FROM → yang tertinggal terdekat = ujung kanan FROM
-            // Loko tadinya di kiri FROM  → yang tertinggal terdekat = ujung kiri FROM
-            var terdekat = lokoAtRight
-                ? srcNonLoko[srcNonLoko.length - 1]
-                : srcNonLoko[0];
-            if (jumlah === 1) {
-                text = 'LEPAS 1 KRT ' + (terdekat || '');
-            } else {
-                text = 'LEPAS ' + jumlah + ' KRT SP ' + (terdekat || '');
-            }
-        }
+        // Campuran: sebutkan keduanya
+        var terjauh2  = lokoAtRight ? ambil[0] : ambil[ambil.length - 1];
+        var terdekat2 = lokoAtRight ? lepas[lepas.length - 1] : lepas[0];
+        var ambilStr = (ambil.length === 1) ? 'AMBIL 1 KRT ' + terjauh2 : 'AMBIL ' + ambil.length + ' KRT SP ' + terjauh2;
+        var lepasStr = (lepas.length === 1) ? 'LEPAS 1 KRT ' + terdekat2 : 'LEPAS ' + lepas.length + ' KRT SP ' + terdekat2;
+        text = ambilStr + ' | ' + lepasStr;
     }
 
     return { label: label, text: text };
@@ -1296,6 +1286,8 @@ function move(target) {
     const leads=(dir==='from-west'&&li===selectedUnits.length-1)||(dir==='from-east'&&li===0);
     if(dir==='from-west') dst.unshift(...selectedUnits); else dst.push(...selectedUnits);
     moveCount++;
+    // Tandai kereta yang ikut loko sebagai "pernah dibawa"
+    selectedUnits.forEach(function(u){ if(!isLoco(u)) keretaPernahDibawa[u] = true; });
     addLog(`GRK ${moveCount}: [${leads?'MENARIK':'MENDORONG'}] ${selectedUnits.length} unit  ${fromTrack} → ${target}  | Wesel: ${getSwitch(fromTrack,target)}`,'ok');
     logMove(_fromSnap, target);
     // Auto-ket: hitung AMBIL/LEPAS setelah state diupdate
@@ -1974,6 +1966,7 @@ function copyLogColumn(col) {
 function resetMoveLogs() {
     moveMidLines = []; moveRightLines = [];
     _agoBuffer = null; _dipoBuffer = null;
+    keretaPernahDibawa = {};
     const midEl = document.getElementById('logMid'), rightEl = document.getElementById('logRight');
     if (midEl) midEl.innerHTML = '<div class="log-entry log-info log-placeholder" style="font-style:italic">Gerakan akan tercatat di sini...</div>';
     if (rightEl) rightEl.innerHTML = '<div class="log-entry log-info log-placeholder" style="font-style:italic">Gerakan (tanpa 8E AGO) akan tercatat di sini...</div>';
