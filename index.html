@@ -1300,7 +1300,11 @@ function move(target) {
     moveCount++;
     addLog(`GRK ${moveCount}: [${leads?'MENARIK':'MENDORONG'}] ${selectedUnits.length} unit  ${fromTrack} → ${target}  | Wesel: ${getSwitch(fromTrack,target)}`,'ok');
     logMove(fromTrack, target);
-    // Auto-fill teks AMBIL/LEPAS ke baris ket yang baru saja dibuat oleh _appendKet
+    // Kolom TOTAL GERAKAN: tambah label dari FROM (jalur asal loko berangkat)
+    if (_fromSnap !== '8E AGO' && target !== '8E AGO') {
+        _lastKetIdx = _appendKet(_fromSnap);
+    }
+    // Auto-fill teks AMBIL/LEPAS ke baris ket yang baru saja dibuat
     _autoFillKetText(_movedSnap, _fromSnap, target);
     // Tandai kereta yang ikut loko sebagai pernah dibawa
     _movedSnap.forEach(function(u){ if(!isLoco(u)) keretaPernahDibawa[u] = true; });
@@ -1896,7 +1900,8 @@ function copyLogKet() {
         if (skipIdx[j]) continue;
         var line = labeled[j];
         if (isEmpty(line)) {
-            outputLines.push(''); // baris kosong → sel kosong di Excel
+            // Baris kosong: tulis label saja (misal "J.II:") tanpa teks
+            outputLines.push(line.label);
         } else {
             outputLines.push(line.label + ' ' + line.text);
         }
@@ -1942,13 +1947,6 @@ function _appendRight(line) {
     el.innerText = line; rightEl.appendChild(el); rightEl.scrollTop = rightEl.scrollHeight;
     var rc = document.getElementById('moveCountRight');
     if (rc) rc.innerText = moveRightLines.length + ' gerakan';
-    // Kolom TOTAL GERAKAN: label otomatis dari jalur asal (FROM)
-    var parts = line.split(' → ');
-    var fromJalur = parts.length >= 2 ? parts[0].trim() : '';
-    if (fromJalur) {
-        var ketIdx = _appendKet(fromJalur);
-        _lastKetIdx = ketIdx; // simpan index untuk dipakai _autoFillKetText
-    }
 }
 
 function logMove(from, to) {
