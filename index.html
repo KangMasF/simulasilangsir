@@ -1286,15 +1286,15 @@ function move(target) {
     const leads=(dir==='from-west'&&li===selectedUnits.length-1)||(dir==='from-east'&&li===0);
     if(dir==='from-west') dst.unshift(...selectedUnits); else dst.push(...selectedUnits);
     moveCount++;
-    // Tandai kereta yang ikut loko sebagai "pernah dibawa"
-    selectedUnits.forEach(function(u){ if(!isLoco(u)) keretaPernahDibawa[u] = true; });
     addLog(`GRK ${moveCount}: [${leads?'MENARIK':'MENDORONG'}] ${selectedUnits.length} unit  ${fromTrack} → ${target}  | Wesel: ${getSwitch(fromTrack,target)}`,'ok');
     logMove(_fromSnap, target);
-    // Auto-ket: hitung AMBIL/LEPAS setelah state diupdate
+    // Auto-ket: hitung AMBIL/LEPAS setelah state diupdate, SEBELUM tandai pernah dibawa
     var _ketResult = _buildKetResult(_movedSnap, _fromSnap, target, _nonLokoWithLokoBefore);
     if (_ketResult) {
         _injectKetLabel(_ketResult.label, _ketResult.text);
     }
+    // Tandai kereta yang ikut loko SETELAH ket dihitung
+    _movedSnap.forEach(function(u){ if(!isLoco(u)) keretaPernahDibawa[u] = true; });
     selectedUnits=[]; fromTrack=null; autoSave(); render();
 }
 
