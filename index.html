@@ -1213,77 +1213,70 @@ function _nonLokoWithLoko() {
 }
 
 function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoWithLokoBefore) {
-    // nonLokoWithLokoBefore = jumlah non-loko bersama loko SEBELUM gerakan ini
-    // Setelah gerakan, hitung jumlah non-loko yang sekarang bersama loko di TO
-    var dstUnitsNow = trackConfigs[targetTrackName] ? trackConfigs[targetTrackName].units : [];
-    var nonLokoWithLokoAfter = dstUnitsNow.filter(function(u){ return !isLoco(u); }).length;
-
     var before = nonLokoWithLokoBefore;
-    var after  = nonLokoWithLokoAfter;
 
-    if (before === 0 && after === 0) return null; // loko kosong bolak-balik, skip
+    // after = non-loko yang sekarang bersama loko di TO
+    var dstUnitsNow = trackConfigs[targetTrackName] ? trackConfigs[targetTrackName].units : [];
+    var after = dstUnitsNow.filter(function(u){ return !isLoco(u); }).length;
+
+    // skip jika tidak ada perubahan atau loko kosong bolak-balik
+    if (before === after) return null;
 
     var label = fromTrackName;
     var text;
+    var nonLokoMoved = movedUnits.filter(function(u){ return !isLoco(u); });
+    var lokoIdx = movedUnits.findIndex(function(u){ return isLoco(u); });
+    // Loko di kanan (lokoIdx = last) → ujung jauh = kiri (index 0)
+    // Loko di kiri  (lokoIdx = 0)   → ujung jauh = kanan (index last)
+    var lokoAtRight = (lokoIdx === movedUnits.length - 1);
 
     if (after > before) {
-        // Loko berangkat bawa lebih banyak dari sebelumnya → AMBIL di FROM
-        var jumlahAmbil = after - before;
-        // Kereta yang baru diambil = non-loko dalam movedUnits yang sebelumnya tidak ada di loko
-        // Kereta lama (before buah) sudah ada, yang baru = sisanya
-        var nonLokoMoved = movedUnits.filter(function(u){ return !isLoco(u); });
-        var lokoIdx = movedUnits.findIndex(function(u){ return isLoco(u); });
-        // Loko di kanan (lokoIdx = last) → kereta baru diambil ada di ujung kiri (jauh dari loko)
-        // Loko di kiri  (lokoIdx = 0)   → kereta baru diambil ada di ujung kanan (jauh dari loko)
-        var terjauh;
-        if (lokoIdx === movedUnits.length - 1) {
-            terjauh = nonLokoMoved[jumlahAmbil - 1];
-        } else {
-            terjauh = nonLokoMoved[nonLokoMoved.length - jumlahAmbil];
-        }
-        if (jumlahAmbil === 1) {
+        // AMBIL — loko membawa lebih banyak setelah berangkat
+        var jumlah = after - before;
+        // Kereta yang baru diambil = jumlah kereta dari ujung JAUH loko dalam movedUnits
+        // lokoAtRight → ujung jauh = kiri (index 0) → terjauh = nonLokoMoved[0]
+        // lokoAtLeft  → ujung jauh = kanan (index last) → terjauh = nonLokoMoved[last]
+        var terjauh = lokoAtRight
+            ? nonLokoMoved[0]
+            : nonLokoMoved[nonLokoMoved.length - 1];
+        if (jumlah === 1) {
             text = 'AMBIL 1 KRT ' + (terjauh || '');
         } else {
-            text = 'AMBIL ' + jumlahAmbil + ' KRT SP ' + (terjauh || '');
+            text = 'AMBIL ' + jumlah + ' KRT SP ' + (terjauh || '');
         }
 
-    } else if (after < before) {
-        // Loko berangkat bawa lebih sedikit dari sebelumnya → LEPAS di FROM
-        var jumlahLepas = before - after;
-        // Kereta yang tertinggal di FROM setelah loko berangkat
-        var srcUnitsNow = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
-        var srcNonLokoNow = srcUnitsNow.filter(function(u){ return !isLoco(u); });
-        // Terdekat dari loko = kereta yang baru saja dilepas (paling dekat posisinya ke loko)
-        var lokoIdx2 = movedUnits.findIndex(function(u){ return isLoco(u); });
-        var terdekat;
-        if (lokoIdx2 === movedUnits.length - 1) {
-            // loko di kanan movedUnits → tadinya di kanan FROM → yang tertinggal terdekat = kanan FROM
-            terdekat = srcNonLokoNow[srcNonLokoNow.length - 1];
-        } else {
-            // loko di kiri movedUnits → tadinya di kiri FROM → yang tertinggal terdekat = kiri FROM
-            terdekat = srcNonLokoNow[0];
-        }
-        if (after === 0 && jumlahLepas === before) {
+    } else {
+        // LEPAS — loko membawa lebih sedikit setelah berangkat
+        var jumlah = before - after;
+        if (after === 0) {
             // Loko melepas semua
             if (before === 1) {
-                text = 'LEPAS 1 KRT ' + (terdekat || '');
+                var srcAll = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
+                var satu = srcAll.filter(function(u){ return !isLoco(u); })[0];
+                text = 'LEPAS 1 KRT ' + (satu || '');
             } else {
                 text = 'LEPAS SEMUA';
             }
         } else {
-            if (jumlahLepas === 1) {
+            // Lepas sebagian — yang tertinggal di FROM adalah yang terdekat ke loko
+            var srcNow = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
+            var srcNonLoko = srcNow.filter(function(u){ return !isLoco(u); });
+            // Loko tadinya di kanan FROM → yang tertinggal terdekat = ujung kanan FROM
+            // Loko tadinya di kiri FROM  → yang tertinggal terdekat = ujung kiri FROM
+            var terdekat = lokoAtRight
+                ? srcNonLoko[srcNonLoko.length - 1]
+                : srcNonLoko[0];
+            if (jumlah === 1) {
                 text = 'LEPAS 1 KRT ' + (terdekat || '');
             } else {
-                text = 'LEPAS ' + jumlahLepas + ' KRT SP ' + (terdekat || '');
+                text = 'LEPAS ' + jumlah + ' KRT SP ' + (terdekat || '');
             }
         }
-
-    } else {
-        return null; // before === after, tidak ada perubahan
     }
 
     return { label: label, text: text };
 }
+
 function move(target) {
     if(layoutMode||!selectedUnits.length||!fromTrack||target===fromTrack) return;
     if(!selectedUnits.some(u=>isLoco(u))){addLog('GAGAL: Tidak ada Lokomotif!','err');return;}
