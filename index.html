@@ -1191,18 +1191,16 @@ function _mapTouchStart(e) {
 
 
 // ══ MOVE ══
-// ── AUTO KET: bangun teks AMBIL/LEPAS otomatis ──
-// Label selalu = TO (jalur tujuan loko)
-// AMBIL: loko tiba di TO membawa non-loko → non-loko di TO bertambah
-//   X = jumlah non-loko yang ikut pindah (dibawa loko)
-//   SP = chip paling jauh dari loko dalam rombongan yang dibawa
-// LEPAS: loko tiba di TO tanpa non-loko, meninggalkan kereta di FROM
-//   X = jumlah non-loko tertinggal di FROM
-//   SP = chip paling dekat dari loko di antara yang tertinggal di FROM
-// LEPAS SEMUA: jika semua non-loko di FROM tertinggal dan loko pergi kosong
-// Loko kosong (tidak bawa/tinggal kereta) → null (skip, ikut buffer)
+// ── AUTO KET: logika berdasarkan jumlah kereta yang dibawa loko setelah berangkat ──
+// Label = FROM (jalur yang baru ditinggalkan loko)
+// Hitung berapa non-loko yang dibawa loko SETELAH berangkat dari FROM:
+//   sebelumnya bawa X, setelah bawa Y:
+//   Y > X → AMBIL (Y - X) KRT SP [terjauh dari loko]
+//   Y < X → LEPAS (X - Y) KRT SP [terdekat dari loko yang tertinggal di FROM]  -- tapi terdekat = yang baru tertinggal
+//   Y = 0 dan X > 0 → LEPAS SEMUA
+//   Y = X = 0 → skip
 
-// Helper: hitung non-loko yang saat ini bersama loko
+// Helper: hitung non-loko yang dibawa loko (di jalur yang sama dengan loko)
 function _nonLokoWithLoko() {
     var names = Object.keys(trackConfigs);
     for (var i = 0; i < names.length; i++) {
@@ -1214,88 +1212,81 @@ function _nonLokoWithLoko() {
     return 0;
 }
 
-function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoAtFromBefore) {
-    var nonLokoMoved = movedUnits.filter(function(u){ return !isLoco(u); });
-    var lokoOnly = nonLokoMoved.length === 0;
+function _buildKetResult(movedUnits, fromTrackName, targetTrackName, nonLokoWithLokoBefore) {
+    // nonLokoWithLokoBefore = jumlah non-loko bersama loko SEBELUM gerakan ini
+    // Setelah gerakan, hitung jumlah non-loko yang sekarang bersama loko di TO
+    var dstUnitsNow = trackConfigs[targetTrackName] ? trackConfigs[targetTrackName].units : [];
+    var nonLokoWithLokoAfter = dstUnitsNow.filter(function(u){ return !isLoco(u); }).length;
 
-    // State setelah gerakan
-    var srcUnitsNow = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
-    var srcNonLokoNow = srcUnitsNow.filter(function(u){ return !isLoco(u); });
+    var before = nonLokoWithLokoBefore;
+    var after  = nonLokoWithLokoAfter;
 
-    if (lokoOnly) {
-        // Loko pergi sendiri ke TO → LEPAS di TO
-        // X = non-loko yang tertinggal di FROM (sudah tidak ada loko)
-        var leftBehind = srcNonLokoNow.length;
-        if (leftBehind === 0) return null; // loko kosong bolak-balik, skip
+    if (before === 0 && after === 0) return null; // loko kosong bolak-balik, skip
 
-        var text;
-        if (leftBehind === nonLokoAtFromBefore) {
-            // Semua non-loko tertinggal
-            if (leftBehind === 1) {
-                var satu = srcNonLokoNow[0];
-                text = 'LEPAS 1 KRT ' + satu;
-            } else {
-                text = 'LEPAS SEMUA';
-            }
+    var label = fromTrackName;
+    var text;
+
+    if (after > before) {
+        // AMBIL: loko mengambil kereta di FROM sebelum berangkat
+        var jumlahAmbil = after - before;
+        // Kereta yang ikut = non-loko dalam movedUnits
+        var nonLokoMoved = movedUnits.filter(function(u){ return !isLoco(u); });
+        var lokoIdx = movedUnits.findIndex(function(u){ return isLoco(u); });
+        // Kereta yang baru diambil = jumlahAmbil kereta terdekat ke loko dalam movedUnits
+        // Loko di kanan (lokoIdx = last) → baru diambil = ujung kiri movedNonLoko
+        // Loko di kiri (lokoIdx = 0)    → baru diambil = ujung kanan movedNonLoko
+        var terjauh;
+        if (jumlahAmbil >= nonLokoMoved.length) {
+            // Semua yang dibawa adalah baru
+            terjauh = (lokoIdx === movedUnits.length - 1)
+                ? nonLokoMoved[0]
+                : nonLokoMoved[nonLokoMoved.length - 1];
         } else {
-            // Sebagian tertinggal
-            // Cari posisi loko dalam movedUnits untuk tahu arah
-            // Loko kosong → tidak ada non-loko di movedUnits, pakai posisi loko di FROM sebelumnya
-            // Kita tahu loko ada di movedUnits (satu-satunya unit)
-            var lokoPos = 0; // loko di movedUnits[0]
-            // Dari FROM sebelumnya, loko ada di ujung mana?
-            // Kita gunakan array FROM sekarang (tanpa loko) + tahu loko sudah pergi
-            // Arah: cek apakah loko tadinya di kiri atau kanan array FROM
-            // Karena sudah dipindah, cari dari snapshot movedUnits
-            // lokoOnly = true → movedUnits = [LOKO]
-            // Kita tidak tahu posisi loko di FROM sebelumnya dari sini
-            // Gunakan pendekatan: loko biasanya di ujung, cek dari targetTrack
-            var dstUnitsNow = trackConfigs[targetTrackName] ? trackConfigs[targetTrackName].units : [];
-            var lokoIdxDst = dstUnitsNow.findIndex(function(u){ return isLoco(u); });
-            // Jika loko di ujung kanan dst → datang dari kiri → di FROM tadinya di kiri
-            // Yang terdekat dari loko di FROM = ujung kiri FROM sekarang = indeks 0
-            var terdekat;
-            if (lokoIdxDst === dstUnitsNow.length - 1) {
-                // loko di kanan dst → FROM: loko tadinya di kiri → terdekat = indeks 0
-                terdekat = srcNonLokoNow[0];
+            // Hanya sebagian yang baru — ambil dari ujung jauh loko sebanyak jumlahAmbil
+            if (lokoIdx === movedUnits.length - 1) {
+                terjauh = nonLokoMoved[jumlahAmbil - 1]; // dari kiri sejumlah jumlahAmbil
             } else {
-                // loko di kiri dst → FROM: loko tadinya di kanan → terdekat = indeks terakhir
-                terdekat = srcNonLokoNow[srcNonLokoNow.length - 1];
-            }
-            if (leftBehind === 1) {
-                text = 'LEPAS 1 KRT ' + terdekat;
-            } else {
-                text = 'LEPAS ' + leftBehind + ' KRT SP ' + terdekat;
+                terjauh = nonLokoMoved[nonLokoMoved.length - jumlahAmbil]; // dari kanan
             }
         }
-        return { label: targetTrackName, text: text };
+        if (jumlahAmbil === 1) {
+            text = 'AMBIL 1 KRT ' + terjauh;
+        } else {
+            text = 'AMBIL ' + jumlahAmbil + ' KRT SP ' + terjauh;
+        }
+
+    } else if (after === 0 && before > 0) {
+        // LEPAS SEMUA: loko meninggalkan semua kereta di FROM
+        text = 'LEPAS SEMUA';
 
     } else {
-        // Loko bawa non-loko ke TO → AMBIL di TO
-        var count = nonLokoMoved.length;
-        if (count === 0) return null;
-
-        // Cari posisi loko dalam movedUnits
-        var lokoIdx = movedUnits.findIndex(function(u){ return isLoco(u); });
-        var nonLokoInOrder = movedUnits.filter(function(u){ return !isLoco(u); });
-
-        // Loko di ujung kanan movedUnits (lokoIdx = last) → kereta terjauh = indeks 0
-        // Loko di ujung kiri movedUnits (lokoIdx = 0) → kereta terjauh = indeks last
-        var ujungJauh;
-        if (lokoIdx === movedUnits.length - 1) {
-            ujungJauh = nonLokoInOrder[0];
+        // LEPAS sebagian: loko meninggalkan (before - after) kereta di FROM
+        var jumlahLepas = before - after;
+        // Kereta yang tertinggal di FROM = kereta yang tidak ikut pindah
+        var srcUnitsNow = trackConfigs[fromTrackName] ? trackConfigs[fromTrackName].units : [];
+        var srcNonLokoNow = srcUnitsNow.filter(function(u){ return !isLoco(u); });
+        // Yang tertinggal = jumlahLepas kereta
+        // Terdekat dari loko = kereta yang paling dekat posisinya ke loko sebelum berangkat
+        // Kita tahu loko sudah di TO — cari posisi loko di movedUnits
+        var lokoIdx2 = movedUnits.findIndex(function(u){ return isLoco(u); });
+        // Loko di kanan movedUnits → di FROM tadinya loko di kanan → terdekat = kanan FROM sekarang
+        // Loko di kiri movedUnits  → di FROM tadinya loko di kiri  → terdekat = kiri FROM sekarang
+        var terdekat;
+        if (lokoIdx2 === movedUnits.length - 1) {
+            // loko tadinya di kanan FROM → yang tertinggal paling dekat = ujung kanan
+            terdekat = srcNonLokoNow[srcNonLokoNow.length - 1];
         } else {
-            ujungJauh = nonLokoInOrder[nonLokoInOrder.length - 1];
+            // loko tadinya di kiri FROM → yang tertinggal paling dekat = ujung kiri
+            terdekat = srcNonLokoNow[0];
         }
-
-        var text;
-        if (count === 1) {
-            text = 'AMBIL 1 KRT ' + ujungJauh;
+        if (jumlahLepas === 1) {
+            text = 'LEPAS 1 KRT ' + (terdekat || '');
         } else {
-            text = 'AMBIL ' + count + ' KRT SP ' + ujungJauh;
+            text = 'LEPAS ' + jumlahLepas + ' KRT SP ' + (terdekat || '');
         }
-        return { label: targetTrackName, text: text };
     }
+
+    return { label: label, text: text };
 }
 function move(target) {
     if(layoutMode||!selectedUnits.length||!fromTrack||target===fromTrack) return;
@@ -1309,7 +1300,7 @@ function move(target) {
     // Snapshot sebelum dipindah untuk auto-ket
     const _movedSnap = [...selectedUnits];
     const _fromSnap  = fromTrack;
-    const _nonLokoAtFromBefore = src.filter(u=>!isLoco(u)).length;
+    const _nonLokoWithLokoBefore = _nonLokoWithLoko(); // berapa non-loko bersama loko sebelum berangkat
     pushHistory();
     selectedUnits.map(u=>src.indexOf(u)).sort((a,b)=>b-a).forEach(i=>{if(i>=0)src.splice(i,1);});
     const li=selectedUnits.findIndex(u=>isLoco(u));
@@ -1319,7 +1310,7 @@ function move(target) {
     addLog(`GRK ${moveCount}: [${leads?'MENARIK':'MENDORONG'}] ${selectedUnits.length} unit  ${fromTrack} → ${target}  | Wesel: ${getSwitch(fromTrack,target)}`,'ok');
     logMove(_fromSnap, target);
     // Auto-ket: hitung AMBIL/LEPAS setelah state diupdate
-    var _ketResult = _buildKetResult(_movedSnap, _fromSnap, target, _nonLokoAtFromBefore);
+    var _ketResult = _buildKetResult(_movedSnap, _fromSnap, target, _nonLokoWithLokoBefore);
     if (_ketResult) {
         _injectKetLabel(_ketResult.label, _ketResult.text);
     }
