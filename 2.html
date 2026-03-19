@@ -1797,9 +1797,23 @@ function _autoFillKetText(movedUnits, fromTrackName, targetTrackName) {
         var ls = (lepas.length === 1) ? 'LEPAS 1 KRT ' + td : 'LEPAS ' + lepas.length + ' KRT SP ' + td;
         text = as + ' | ' + ls;
     }
-    // Transit (loko bawa kereta lama tanpa ambil/lepas) → teks kosong, tidak diisi
-
-    if (!text) return; // tidak ada yang perlu diisi
+    // Transit (loko bawa kereta lama tanpa ambil/lepas) → teks kosong, hapus baris label
+    if (!text) {
+        // Hapus baris label yang baru dibuat oleh _appendKet karena tidak ada isian
+        var i2 = _lastKetIdx;
+        if (i2 >= 0 && i2 < ketLines.length) {
+            ketLines.splice(i2, 1);
+            var ketEl2 = document.getElementById('logKet');
+            if (ketEl2) {
+                var allRows = ketEl2.querySelectorAll('.log-ket-row');
+                if (allRows[i2]) allRows[i2].remove();
+            }
+            _lastKetIdx = -1;
+            _updateKetCount();
+            _saveKet();
+        }
+        return;
+    }
 
     // Gunakan _lastKetIdx yang disisipkan oleh _appendRight→_appendKet
     var i = _lastKetIdx;
