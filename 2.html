@@ -1815,26 +1815,6 @@ function _autoFillKetText(movedUnits, fromTrackName, targetTrackName) {
             if (inp) inp.value = text;
         }
     }
-
-    // Setelah otomatisasi mengisi baris i, hapus baris kosong (tanpa label, tanpa teks)
-    // yang langsung mengikutinya — itu adalah baris kosong dari _ensureBlankRow.
-    // Baris kosong yang sudah diisi manual TIDAK dihapus.
-    var next = i + 1;
-    if (next < ketLines.length && ketLines[next].label === '' && (!ketLines[next].text || ketLines[next].text.trim() === '')) {
-        ketLines.splice(next, 1);
-        if (ketEl) {
-            var allRows = ketEl.querySelectorAll('.log-ket-row');
-            if (allRows[next]) allRows[next].remove();
-            // Update dataset.idx semua baris setelahnya
-            var updatedRows = ketEl.querySelectorAll('.log-ket-row');
-            for (var j = next; j < updatedRows.length; j++) {
-                updatedRows[j].dataset.idx = j;
-                var inp2 = updatedRows[j].querySelector('.log-ket-input');
-                if (inp2) inp2.dataset.idx = j;
-            }
-        }
-    }
-
     _updateKetCount();
     _saveKet();
 }
@@ -1848,34 +1828,16 @@ function _appendKet(toJalur) {
     if (ph) ph.remove();
     var label = (JALUR_LABEL[toJalur] || toJalur) + ':';
 
-    // Cari baris tanpa label dari atas (yang belum dapat label dari simulasi)
-    var targetIdx = -1;
-    for (var i = 0; i < ketLines.length; i++) {
-        if (ketLines[i].label === '') { targetIdx = i; break; }
-    }
-
-    if (targetIdx !== -1) {
-        // Inject label ke baris kosong yang sudah ada
-        ketLines[targetIdx].label = label;
-        // Update DOM label span
-        var rows = ketEl.querySelectorAll('.log-ket-row');
-        if (rows[targetIdx]) {
-            var lbl = rows[targetIdx].querySelector('.log-ket-label');
-            if (lbl) lbl.innerText = label;
-        }
-    } else {
-        // Tidak ada baris kosong → buat baris baru dengan label
-        targetIdx = ketLines.length;
-        ketLines.push({ label: label, text: '' });
-        var row = _makeKetRow(targetIdx);
-        ketEl.appendChild(row);
-        ketEl.scrollTop = ketEl.scrollHeight;
-    }
+    // Selalu buat baris baru dengan label
+    var targetIdx = ketLines.length;
+    ketLines.push({ label: label, text: '' });
+    var row = _makeKetRow(targetIdx);
+    ketEl.appendChild(row);
+    ketEl.scrollTop = ketEl.scrollHeight;
 
     _updateKetCount();
-    _ensureBlankRow(); // pastikan selalu ada 1 baris kosong di bawah
     _saveKet();
-    return targetIdx; // kembalikan index baris yang baru dibuat
+    return targetIdx;
 }
 
 function _saveKet() {
@@ -1890,7 +1852,6 @@ function _loadKet() {
         if (!Array.isArray(saved) || saved.length === 0) return;
         ketLines = saved;
         _rebuildKetDOM();
-        _ensureBlankRow();
     } catch(_) {}
 }
 
@@ -1898,10 +1859,6 @@ function _rebuildKetDOM() {
     var ketEl = document.getElementById('logKet');
     if (!ketEl) return;
     ketEl.innerHTML = '';
-    if (ketLines.length === 0) {
-        // Mulai dengan 1 baris kosong siap isi
-        ketLines.push({ label: '', text: '' });
-    }
     ketLines.forEach(function(item, idx) {
         ketEl.appendChild(_makeKetRow(idx));
     });
@@ -1910,7 +1867,7 @@ function _rebuildKetDOM() {
 }
 
 function resetKetLog() {
-    ketLines = [{ label: '', text: '' }]; // reset ke 1 baris kosong
+    ketLines = [];
     _rebuildKetDOM();
     try { localStorage.removeItem(KET_STORAGE_KEY); } catch(_) {}
 }
