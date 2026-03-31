@@ -102,12 +102,12 @@ body { font-family: var(--font-sans); background: var(--warna-bg-halaman); color
 
 /* ── HEADER ── */
 .header {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
     background: var(--warna-header-bg); border-bottom: 3px solid var(--warna-header-garis);
     padding: 6px 12px; border-radius: 4px 4px 0 0;
 }
 /* ✏️ Ganti font judul: ubah --font-judul di atas */
-.header-title { font-size: var(--ukuran-judul-header); font-weight: 700; letter-spacing: 1.5px; color: #fff; flex: 1; font-family: var(--font-judul); }
+.header-title { font-size: var(--ukuran-judul-header); font-weight: 700; letter-spacing: 1.5px; color: #fff; font-family: var(--font-judul); }
 .header-title span { color: var(--warna-aksen); }
 .hdr-stat { display: flex; flex-direction: column; align-items: center; min-width: 44px; }
 .hdr-stat-val { font-size: 20px; font-weight: 700; line-height: 1; color: var(--warna-aksen); font-family: var(--font-mono); }
@@ -606,12 +606,14 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 const MENU_VISIBILITY = {
     aturPosisi:   false,   // 📐 ATUR POSISI — geser slot jalur
     snapGrid:     false,   // ⊞ SNAP GRID — tempel ke grid 5px
-    simpan:       true,   // 💾 SIMPAN
-    muat:         true,   // 📂 MUAT
+    simpan:       false,  // 💾 SIMPAN
+    muat:         false,  // 📂 MUAT
     export:       true,   // ⬇ EXPORT JSON
     import:       true,   // ⬆ IMPORT JSON
     reset:        true,   // ↺ RESET ke awal
     kustomVisual: false,   // 🎨 KUSTOM VISUAL — panel kustomisasi tampilan
+    menuKlik:     false,  // ☰ MENU KLIK — toggle menu klik kanan
+    lepasDrag:    false,  // 🔓 LEPAS — batalkan seleksi kereta
     showDividers: true,   // garis pemisah | antar kelompok
 };
 
@@ -802,8 +804,8 @@ function buildHeader() {
     btn('btn-reset','','confirmReset()','↺ RESET',MENU_VISIBILITY.reset);
     if (MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>');
     hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-reset-count" id="btnResetCount" onclick="confirmResetCount()" title="Reset hitungan gerakan saja (posisi kereta tidak berubah)">↺ RESET HITUNGAN</button>`);
-    hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-ctx-toggle" id="btnCtxToggle" onclick="toggleCtxEnabled()" title="Aktifkan/nonaktifkan menu klik kanan">☰ MENU KLIK</button>`);
-    hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-lepas-drag" id="btnLepasDrag" onclick="lepasDrag()" title="Batalkan seleksi kereta yang sedang dipilih">🔓 LEPAS</button>`);
+    if (MENU_VISIBILITY.menuKlik) hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-ctx-toggle" id="btnCtxToggle" onclick="toggleCtxEnabled()" title="Aktifkan/nonaktifkan menu klik kanan">☰ MENU KLIK</button>`);
+    if (MENU_VISIBILITY.lepasDrag) hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-lepas-drag" id="btnLepasDrag" onclick="lepasDrag()" title="Batalkan seleksi kereta yang sedang dipilih">🔓 LEPAS</button>`);
     if(MENU_VISIBILITY.kustomVisual){ if(MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>'); hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-kustom" id="btnKustom" onclick="toggleKustomPanel()">🎨 KUSTOM</button>`); }
 }
 
