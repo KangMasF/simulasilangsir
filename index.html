@@ -783,7 +783,6 @@ function buildHeader() {
     hdr.innerHTML += `
         <button class="btn-undo" id="btnUndo" onclick="undo()" title="Undo (Ctrl+Z / ← )" disabled>↩</button>
         <div class="header-title">SIMULATOR LANGSIR <span>KETAPANG</span> <small style="color:#5dade2;font-size:10px;font-weight:400"> v8</small></div>
-        <button class="btn-undo" id="btnRedo" onclick="redo()" title="Redo (Ctrl+Y / → )" disabled>↪</button>
         <div class="hdr-stat"><div class="hdr-stat-val" id="moveCount">0</div><div class="hdr-stat-lbl">GERAKAN</div></div>
         <div class="hdr-stat"><div class="hdr-stat-val" id="selCount">0</div><div class="hdr-stat-lbl">DIPILIH</div></div>`;
     const div = () => { if (MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>'); };
@@ -799,6 +798,7 @@ function buildHeader() {
     btn('btn-reset','','confirmReset()','↺ RESET',MENU_VISIBILITY.reset);
     if (MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>');
     hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-reset-count" id="btnResetCount" onclick="confirmResetCount()" title="Reset hitungan gerakan saja (posisi kereta tidak berubah)">↺ RESET HITUNGAN</button>`);
+    hdr.insertAdjacentHTML('beforeend',`<button class="btn-undo" id="btnRedo" onclick="redo()" title="Redo (Ctrl+Y / →)" disabled>↪</button>`);
     if (MENU_VISIBILITY.menuKlik) hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-ctx-toggle" id="btnCtxToggle" onclick="toggleCtxEnabled()" title="Aktifkan/nonaktifkan menu klik kanan">☰ MENU KLIK</button>`);
     if (MENU_VISIBILITY.lepasDrag) hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-lepas-drag" id="btnLepasDrag" onclick="lepasDrag()" title="Batalkan seleksi kereta yang sedang dipilih">🔓 LEPAS</button>`);
     if(MENU_VISIBILITY.kustomVisual){ if(MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>'); hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-kustom" id="btnKustom" onclick="toggleKustomPanel()">🎨 KUSTOM</button>`); }
