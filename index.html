@@ -604,8 +604,8 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 // ║  Ubah true → false untuk menyembunyikan tombol          ║
 // ╚══════════════════════════════════════════════════════════╝
 const MENU_VISIBILITY = {
-    aturPosisi:   true,   // 📐 ATUR POSISI — geser slot jalur
-    snapGrid:     true,   // ⊞ SNAP GRID — tempel ke grid 5px
+    aturPosisi:   false,   // 📐 ATUR POSISI — geser slot jalur
+    snapGrid:     false,   // ⊞ SNAP GRID — tempel ke grid 5px
     simpan:       false,  // 💾 SIMPAN
     muat:         false,  // 📂 MUAT
     export:       true,   // ⬇ EXPORT JSON
@@ -693,8 +693,8 @@ const DEFAULT_TRACKS = {
     "8E AGO": { x:1200, y:199, w:50, cap:13, units:[],
                 westX:1200, eastX:1250 },  // 1205+50=1255
 
-    "JALUR PUTAR": { x:300, y:400, w:150, cap:0, units:[],
-                     westX:300, eastX:450 },
+    "JALUR PUTAR": { x:50, y:420, w:200, cap:0, units:[],
+                     westX:50, eastX:250 },
 };
 
 
@@ -1130,8 +1130,8 @@ function render() {
 function toggleLayoutMode() { layoutMode=!layoutMode; selectedUnits=[]; fromTrack=null; document.body.classList.toggle('layout-mode',layoutMode); const b=document.getElementById('btnLayout'); if(b) b.classList.toggle('active',layoutMode); document.getElementById('layoutLabel').style.display=layoutMode?'inline':'none'; addLog(layoutMode?'📐 Mode Atur Posisi AKTIF':'📐 NONAKTIF','edit'); render(); }
 function toggleSnap() { snapGrid=!snapGrid; const b=document.getElementById('btnSnap'); if(b) b.classList.toggle('active',snapGrid); addLog(snapGrid?'⊞ Snap Grid ON (5px)':'⊞ Snap Grid OFF','edit'); }
 function onSlotDragStart(e) { if(!layoutMode) return; e.preventDefault(); e.stopPropagation(); const slot=e.currentTarget.closest('.track-slot'), name=slot.dataset.track; slotDrag={name,startMouseX:e.clientX,startMouseY:e.clientY,startSlotX:trackConfigs[name].x,startSlotY:trackConfigs[name].y}; slot.style.opacity='.65'; slot.style.zIndex='50'; }
-document.addEventListener('mousemove',(e)=>{ if(!slotDrag) return; const dx=e.clientX-slotDrag.startMouseX, dy=e.clientY-slotDrag.startMouseY; const nx=snapVal(Math.max(0,slotDrag.startSlotX+dx)), ny=snapVal(Math.max(0,slotDrag.startSlotY+dy)); trackConfigs[slotDrag.name].x=nx; trackConfigs[slotDrag.name].y=ny; trackConfigs[slotDrag.name].westX=nx; trackConfigs[slotDrag.name].eastX=nx+trackConfigs[slotDrag.name].w; const s=document.querySelector(`.track-slot[data-track="${CSS.escape(slotDrag.name)}"]`); if(s){s.style.left=nx+'px';s.style.top=ny+'px';} });
-document.addEventListener('mouseup',()=>{ if(slotDrag){const s=document.querySelector(`.track-slot[data-track="${CSS.escape(slotDrag.name)}"]`);if(s){s.style.opacity='';s.style.zIndex='';} addLog(`📐 [${slotDrag.name}] → x:${trackConfigs[slotDrag.name].x}, y:${trackConfigs[slotDrag.name].y}`,'edit'); autoSave(); slotDrag=null;} dragState=null; dragCurrentIdx=-1; });
+document.addEventListener('mousemove',(e)=>{ if(!slotDrag) return; const dx=e.clientX-slotDrag.startMouseX, dy=e.clientY-slotDrag.startMouseY; const nx=snapVal(Math.max(0,slotDrag.startSlotX+dx)), ny=snapVal(Math.max(0,slotDrag.startSlotY+dy)); trackConfigs[slotDrag.name].x=nx; trackConfigs[slotDrag.name].y=ny; trackConfigs[slotDrag.name].westX=nx; trackConfigs[slotDrag.name].eastX=nx+trackConfigs[slotDrag.name].w; const s=document.querySelector(`.track-slot[data-track="${CSS.escape(slotDrag.name)}"]`); if(s){s.style.left=nx+'px';s.style.top=ny+'px'; let coordEl=s.querySelector('.slot-coord-hint'); if(!coordEl){coordEl=document.createElement('div');coordEl.className='slot-coord-hint';coordEl.style.cssText='font-size:9px;font-family:monospace;color:#f5a623;background:rgba(0,0,0,0.7);padding:1px 4px;border-radius:2px;position:absolute;top:0;right:0;z-index:99;pointer-events:none;';s.appendChild(coordEl);} coordEl.innerText='x:'+nx+' y:'+ny;} });
+document.addEventListener('mouseup',()=>{ if(slotDrag){const s=document.querySelector(`.track-slot[data-track="${CSS.escape(slotDrag.name)}"]`);if(s){s.style.opacity='';s.style.zIndex=''; const ch=s.querySelector('.slot-coord-hint'); if(ch) ch.remove();} addLog(`📐 [${slotDrag.name}] → x:${trackConfigs[slotDrag.name].x}, y:${trackConfigs[slotDrag.name].y}`,'edit'); autoSave(); slotDrag=null;} dragState=null; dragCurrentIdx=-1; });
 document.addEventListener('touchend', ()=>{ _touchDragActive=false; dragState=null; dragCurrentIdx=-1; }, {passive:true});
 
 // ══ DRAG SELECT ══
