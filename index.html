@@ -151,8 +151,9 @@ body { font-family: var(--font-sans); background: var(--warna-bg-halaman); color
 .info-bar {
     background: var(--warna-bg-infobar); border: 1px solid var(--warna-border); border-top: none;
     padding: 3px 12px; font-family: var(--font-mono); font-size: 10px; color: #5a8ab0;
-    display: flex; justify-content: space-between; margin-bottom: 5px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;
 }
+.info-bar-undo-wrap { display: flex; gap: 4px; align-items: center; }
 .info-bar .hint { color: var(--warna-aksen); font-weight: 700; }
 #layoutLabel { color: #f5a623; font-weight: 700; display: none; }
 
@@ -549,6 +550,10 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 
 <div class="info-bar">
     <span id="statusBar">Drag unit untuk memilih | <span class="hint">SHIFT+KLIK</span> extend | <span class="hint">KLIK KANAN</span> opsi | <span class="hint">+</span> tambah</span>
+    <div class="info-bar-undo-wrap">
+        <button class="btn-undo" id="btnUndo2" onclick="undo()" title="Undo (← )" disabled>↩</button>
+        <button class="btn-undo" id="btnRedo2" onclick="redo()" title="Redo (→ )" disabled>↪</button>
+    </div>
     <span id="layoutLabel">[ MODE ATUR POSISI — Drag ⠿ untuk pindahkan slot ]</span>
 </div>
 
@@ -604,8 +609,8 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
 // ║  Ubah true → false untuk menyembunyikan tombol          ║
 // ╚══════════════════════════════════════════════════════════╝
 const MENU_VISIBILITY = {
-    aturPosisi:   true,   // 📐 ATUR POSISI — geser slot jalur
-    snapGrid:     true,   // ⊞ SNAP GRID — tempel ke grid 5px
+    aturPosisi:   false,   // 📐 ATUR POSISI — geser slot jalur
+    snapGrid:     false,   // ⊞ SNAP GRID — tempel ke grid 5px
     simpan:       false,  // 💾 SIMPAN
     muat:         false,  // 📂 MUAT
     export:       true,   // ⬇ EXPORT JSON
@@ -784,15 +789,9 @@ function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 function buildHeader() {
     const hdr = document.getElementById('mainHeader');
     hdr.innerHTML = '';
-    const title = document.createElement('div');
-    title.className = 'header-title';
-    title.innerHTML = 'SIMULATOR LANGSIR <span>KETAPANG</span> <small style="color:#5dade2;font-size:10px;font-weight:400"> v8</small>';
-    hdr.appendChild(title);
     hdr.innerHTML += `
-        <div class="hdr-undo-wrap">
-            <button class="btn-undo" id="btnUndo" onclick="undo()" title="Undo (Ctrl+Z)" disabled>↩</button>
-            <button class="btn-undo" id="btnRedo" onclick="redo()" title="Redo (Ctrl+Y)" disabled>↪</button>
-        </div>
+        <button class="btn-undo" id="btnUndo" onclick="undo()" title="Undo (Ctrl+Z / ←)" disabled>↩</button>
+        <div class="header-title">SIMULATOR LANGSIR <span>KETAPANG</span> <small style="color:#5dade2;font-size:10px;font-weight:400"> v8</small></div>
         <div class="hdr-stat"><div class="hdr-stat-val" id="moveCount">0</div><div class="hdr-stat-lbl">GERAKAN</div></div>
         <div class="hdr-stat"><div class="hdr-stat-val" id="selCount">0</div><div class="hdr-stat-lbl">DIPILIH</div></div>`;
     const div = () => { if (MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>'); };
@@ -808,6 +807,8 @@ function buildHeader() {
     btn('btn-reset','','confirmReset()','↺ RESET',MENU_VISIBILITY.reset);
     if (MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>');
     hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-reset-count" id="btnResetCount" onclick="confirmResetCount()" title="Reset hitungan gerakan saja (posisi kereta tidak berubah)">↺ RESET HITUNGAN</button>`);
+    if (MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>');
+    hdr.insertAdjacentHTML('beforeend',`<button class="btn-undo" id="btnRedo" onclick="redo()" title="Redo (Ctrl+Y / →)" disabled>↪</button>`);
     if (MENU_VISIBILITY.menuKlik) hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-ctx-toggle" id="btnCtxToggle" onclick="toggleCtxEnabled()" title="Aktifkan/nonaktifkan menu klik kanan">☰ MENU KLIK</button>`);
     if (MENU_VISIBILITY.lepasDrag) hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-lepas-drag" id="btnLepasDrag" onclick="lepasDrag()" title="Batalkan seleksi kereta yang sedang dipilih">🔓 LEPAS</button>`);
     if(MENU_VISIBILITY.kustomVisual){ if(MENU_VISIBILITY.showDividers) hdr.insertAdjacentHTML('beforeend','<div class="hdr-divider"></div>'); hdr.insertAdjacentHTML('beforeend',`<button class="hdr-btn btn-kustom" id="btnKustom" onclick="toggleKustomPanel()">🎨 KUSTOM</button>`); }
@@ -1040,9 +1041,9 @@ function snapshotForHistory() { return { tracks:deepClone(trackConfigs), moveCou
 function pushHistory() { undoStack.push(snapshotForHistory()); if (undoStack.length>HISTORY_MAX) undoStack.shift(); redoStack=[]; updateUndoButtons(); _saveUndoRedo(); }
 function updateUndoButtons() {
     const u=document.getElementById('btnUndo'), r=document.getElementById('btnRedo');
-    if(!u||!r) return;
-    u.disabled=undoStack.length===0; r.disabled=redoStack.length===0;
-    u.classList.toggle('can-act',undoStack.length>0); r.classList.toggle('can-act',redoStack.length>0);
+    const u2=document.getElementById('btnUndo2'), r2=document.getElementById('btnRedo2');
+    [u,u2].forEach(b=>{ if(!b) return; b.disabled=undoStack.length===0; b.classList.toggle('can-act',undoStack.length>0); });
+    [r,r2].forEach(b=>{ if(!b) return; b.disabled=redoStack.length===0; b.classList.toggle('can-act',redoStack.length>0); });
 }
 function undo() { if(!undoStack.length) return; redoStack.push(snapshotForHistory()); const s=undoStack.pop(); trackConfigs=s.tracks; moveCount=s.moveCount; unitColors=s.colors||{}; if(s.midLines!==undefined){moveMidLines=s.midLines;moveRightLines=s.rightLines;_agoBuffer=s.agoBuffer||null;_dipoBuffer=s.dipoBuffer||null;_dipoKetPending=s.dipoKetPending||null;if(s.ketLines!==undefined){ketLines=s.ketLines;_rebuildKetDOM();_saveKet();}if(s.pernah!==undefined)keretaPernahDibawa=s.pernah;rebuildMoveLogs();} selectedUnits=[]; fromTrack=null; addLog(`↩ Undo — gerakan ${moveCount}`,'edit'); updateUndoButtons(); _saveUndoRedo(); autoSave(); render(); }
 function redo() { if(!redoStack.length) return; undoStack.push(snapshotForHistory()); const s=redoStack.pop(); trackConfigs=s.tracks; moveCount=s.moveCount; unitColors=s.colors||{}; if(s.midLines!==undefined){moveMidLines=s.midLines;moveRightLines=s.rightLines;_agoBuffer=s.agoBuffer||null;_dipoBuffer=s.dipoBuffer||null;_dipoKetPending=s.dipoKetPending||null;if(s.ketLines!==undefined){ketLines=s.ketLines;_rebuildKetDOM();_saveKet();}if(s.pernah!==undefined)keretaPernahDibawa=s.pernah;rebuildMoveLogs();} selectedUnits=[]; fromTrack=null; addLog(`↪ Redo — gerakan ${moveCount}`,'edit'); updateUndoButtons(); _saveUndoRedo(); autoSave(); render(); }
@@ -1595,8 +1596,17 @@ function updateAddPreview() {
 function parsePasteText(raw) {
     const trimmed=raw.trim(); if(!trimmed) return [];
     const tabs=(trimmed.match(/\t/g)||[]).length, nls=(trimmed.match(/[\n\r]+/g)||[]).length;
-    // Hapus semua teks dalam kurung di akhir nama sarana, lalu trim spasi sisa
-    const clean = s => s.replace(/\s*\([^)]*\)\s*$/,'').trim();
+    // Hapus semua teks dalam kurung di akhir nama sarana, kecuali (KSV) → pertahankan
+    const clean = s => {
+        s = s.trim();
+        // Cek apakah ada (KSV) di akhir
+        const ksv = /\(KSV\)/i.test(s);
+        // Hapus semua kurung di akhir
+        s = s.replace(/\s*\([^)]*\)\s*$/,'').trim();
+        // Jika ada KSV, tambahkan kembali
+        if (ksv) s = s + ' (KSV)';
+        return s;
+    };
     if(tabs>0&&nls===0) return trimmed.split('\t').map(s=>clean(s)).filter(s=>s.length>0);
     return trimmed.split(/[\n\r]+/).map(l=>clean(l.split('\t')[0].trim())).filter(l=>l.length>0);
 }
