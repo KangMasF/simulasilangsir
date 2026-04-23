@@ -151,9 +151,9 @@ body { font-family: var(--font-sans); background: var(--warna-bg-halaman); color
 .info-bar {
     background: var(--warna-bg-infobar); border: 1px solid var(--warna-border); border-top: none;
     padding: 3px 12px; font-family: var(--font-mono); font-size: 10px; color: #5a8ab0;
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; position: relative;
 }
-.info-bar-undo-wrap { display: flex; gap: 4px; align-items: center; }
+.info-bar-undo-wrap { display: flex; gap: 6px; align-items: center; position: absolute; left: 50%; transform: translateX(-50%); }
 .info-bar .hint { color: var(--warna-aksen); font-weight: 700; }
 #layoutLabel { color: #f5a623; font-weight: 700; display: none; }
 
@@ -552,6 +552,7 @@ body.layout-mode .track-slot .slot-drag-handle { display: flex; }
     <span id="statusBar">Drag unit untuk memilih | <span class="hint">SHIFT+KLIK</span> extend | <span class="hint">KLIK KANAN</span> opsi | <span class="hint">+</span> tambah</span>
     <div class="info-bar-undo-wrap">
         <button class="btn-undo" id="btnUndo2" onclick="undo()" title="Undo (← )" disabled>↩</button>
+        <span style="color:#3a5a7a;font-size:10px;letter-spacing:-1px">─────</span>
         <button class="btn-undo" id="btnRedo2" onclick="redo()" title="Redo (→ )" disabled>↪</button>
     </div>
     <span id="layoutLabel">[ MODE ATUR POSISI — Drag ⠿ untuk pindahkan slot ]</span>
